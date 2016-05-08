@@ -1,0 +1,17 @@
+#parse("htdocs/common/html-start.vm")
+
+<body data-spy="scroll" data-target=".bs-docs-sidebar">
+<div id="wrap">
+	#parse("htdocs/common/top-menu.vm")
+
+	<div class="container-fluid">
+	
+    <h1>LOGOUT</h1>
+      <p>
+        <a href="${contextRoot}/login.html">Login</a>
+      </p>
+  </div>
+</div>
+#parse("htdocs/common/footer.vm")
+</body>
+#parse("htdocs/common/html-end.vm")

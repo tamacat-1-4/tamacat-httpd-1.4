@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Index of ${url}</title>
+    <style type="text/css">
+      html {font-size:100%;}
+      body {font-size:78%;
+            font-family:Verdana, Arial, Sans-Serif;
+            background:#fff; color:#333; 
+            margin:0; padding:0;}
+      h1{font-size:110%; color:white; background-color:#444;padding:5px; margin:0;}
+      h3{font-size:100%; color:white; background-color:#444;padding:2px;}
+      a{color:#000066; text-decoration:none;} hr{color : #666;}
+      table{margin: 10px; padding: 4px;}
+      th{text-align:left; border-bottom:1px solid #666;}
+      tr.row:hover{background-color:#eee;}
+      td {padding:1px 8px; border-bottom:1px solid #f9f9f9;}
+      #search {float:right; margin-top:5px; }
+      input[type=submit] {background:#eee; border:1px solid transparent; padding:3px 8px;}
+      input[type=submit]:hover {background:#ddd;}
+    </style>
+  </head>
+  <body>
+    <h1>Index of ${url}</h1>
+    <div style="width:95%;">
+      <form id="search" action="$!{url}" method="get">
+        <input type="text" name="q" size="16" value="$!{q}" onchange="this.submit()" />
+        <input type="submit" value="Search" />
+      </form>
+    </div>
+    <table style="width:95%;">
+      <tr>
+        <th style="width:65%;">Name</th>
+        <th style="width:20%;" nowrap="nowrap">Last modified</th>
+        <th style="witdh:15%;text-align:right;">Size</th>
+      </tr>
+#if($parent)
+      <tr>
+        <td colspan="3"><a href="../"><span>../</span></a></td>
+      </tr>
+#end
+#foreach($file in $list)
+      <tr class="row">
+        <td><a href="$!url$!file.getName"><span>$!file.getName</span></a></td>
+        <td nowrap="nowrap">$!file.lastModified</td>
+        <td style="text-align:right;" nowrap="nowrap">$!file.length</td>
+      </tr>
+#end
+    </table>
+  </body>
+</html>

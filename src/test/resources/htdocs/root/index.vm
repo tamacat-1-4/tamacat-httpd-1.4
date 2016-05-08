@@ -1,0 +1,35 @@
+#parse("htdocs/common/html-start.vm")
+<body>
+	<div id="wrap">
+		#parse("htdocs/common/top-menu.vm")
+		<div class="container">
+			<div id="main">
+				<h1>Welcome</h1>
+				<p>The tamacat-httpd is a open source Java Web Server software, powered by
+					"<a href="http://hc.apache.org/" title="Go to Apache HttpComponents project site." target="_blank">
+					<span>Apache HttpComponents</span></a>".
+					<p>This is a customizable HTTP/HTTPS Server framework and Reverse Proxy.</p>
+				</p>
+				<h2>Features</h2>
+				<p>
+					<ul>
+						<li>Standards based, pure Java HTTP Server, implementation of HTTP versions 1.0 and 1.1</li>
+						<li>Basic, Digest, Form-based authentication</li>
+						<li>Supports HTTPS multiple SSL certificates using Server Name Indication (SNI)</li>
+						<li>Pluggable architecture for custom request/response handler and filters</li>
+						<li>It provides a default handler: Reverse Proxy, Velocity Page and Static Contents Web Server</li>
+						<li>Required Java Platform, Standard Edition 8 (JRE/JDK)</li>
+					</ul>
+				</p>
+				<h2>License</h2>
+				<p>The tamacat-httpd is licensed under the terms of the
+					<a href="http://www.apache.org/licenses/LICENSE-2.0.html" target="_blank">
+						<span>Apache License, Version 2.0.</span>
+					</a>
+				</p>
+			</div>
+		</div>
+	</div>
+	#parse("htdocs/common/footer.vm")
+</body>
+#parse("htdocs/common/html-end.vm")

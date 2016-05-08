@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+	<bean id="AuthComponent"
+		class="org.tamacat.httpd.examples.UserAuthComponent">
+		<property name="username">
+			<value>admin</value>
+		</property>
+		<property name="password">
+			<value>pass</value>
+		</property>
+	</bean>
+
+	<bean id="SingleSignOn" class="org.tamacat.httpd.auth.CookieBasedSingleSignOn">
+		<property name="singleSignOnCookieName">
+			<value>SingleSignOnUser</value>
+		</property>
+		<property name="freeAccessExtensions">
+			<value>.css,.js,.map,.jpg,.gif,.png,.ico</value>
+		</property>
+	</bean>
+
+	<bean id="BasicAuthFilter"
+		class="org.tamacat.httpd.auth.BasicAuthProcessor">
+		<property name="authComponent">
+			<ref bean="AuthComponent" />
+		</property>
+		<property name="singleSignOn">
+			<ref bean="SingleSignOn" />
+		</property>
+		<property name="realm">
+			<value>Basic Authentication area ${yyyyMMddHHmmssS}</value>
+		</property>
+		<property name="freeAccessExtensions">
+			<value>.css,.js,.map,.jpg,.gif,.png,.ico</value>
+		</property>
+	</bean>
+
+	<bean id="DigestAuthFilter"
+		class="org.tamacat.httpd.auth.DigestAuthProcessor">
+		<property name="authComponent">
+			<ref bean="AuthComponent" />
+		</property>
+	</bean>
+
+	<bean id="WSSEAuthFilter"
+		class="org.tamacat.httpd.auth.WSSEAuthProcessor">
+		<property name="authComponent">
+			<ref bean="AuthComponent" />
+		</property>
+	</bean>
+
+	<bean id="FormAuthFilter" class="org.tamacat.httpd.auth.FormAuthProcessor">
+		<property name="authComponent">
+			<ref bean="AuthComponent" />
+		</property>
+		<property name="loginPageUrl">
+			<value>/login.html</value>
+		</property>
+		<property name="freeAccessExtensions">
+			<value>.css,.js,.map,.jpg,.gif,.png,.ico</value>
+		</property>
+	</bean>
+
+	<bean id="SessionFilter" class="org.tamacat.httpd.filter.SessionCookieFilter">
+		<property name="sessionCookieName">
+			<value>tamacat-httpd-Session</value>
+		</property>
+	</bean>
+
+	<bean id="AccessControlFilter"
+		class="org.tamacat.httpd.examples.AccessControlFilter">
+		<property name="cacheSize">
+			<value>100</value>
+		</property>
+		<property name="cacheExpire">
+			<value>5000</value>
+		</property>
+	</bean>
+
+	<bean id="AccessLogFilter" class="org.tamacat.httpd.filter.AccessLogFilter" />
+
+	<bean id="PerformanceCounterFilter" class="org.tamacat.httpd.filter.PerformanceCounterFilter" />
+
+	<bean id="VelocityHandler"
+		class="org.tamacat.httpd.handler.VelocityHttpHandler">
+		<property name="docsRoot">
+			<value>${server.home}/src/test/resources/htdocs/root/</value>
+		</property>
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+		<!--
+		<property name="httpFilter">
+			<ref bean="FormAuthFilter" />
+		</property>
+		-->
+	</bean>
+
+	<bean id="DefaultHandler"
+		class="org.tamacat.httpd.handler.LocalFileStreamingHttpHandler">
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+		<property name="docsRoot">
+			<value>${server.home}/src/test/resources/htdocs/test/</value>
+		</property>
+		<property name="listings">
+			<value>true</value>
+		</property>
+	</bean>
+
+	<bean id="DefaultHandler2"
+		class="org.tamacat.httpd.handler.LocalFileHttpHandler">
+		<property name="docsRoot">
+			<value>${server.home}/src/test/resources/htdocs2/</value>
+		</property>
+		<property name="listings">
+			<value>true</value>
+		</property>
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+	</bean>
+
+	<bean id="ReverseHandler"
+		class="org.tamacat.httpd.handler.ReverseProxyHandler">
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+		<property name="httpFilter">
+			<ref bean="PerformanceCounterFilter" />
+		</property>
+		<property name="httpFilter" >
+			<ref bean="BasicAuthFilter" />
+		</property>
+		<property name="httpFilter">
+			<ref bean="SessionFilter" />
+		</property>
+		<property name="httpFilter">
+			<ref bean="AccessControlFilter" />
+		</property>
+		<property name="httpResponseInterceptor" mode="add">
+			<ref bean="html" />
+		</property>
+	</bean>
+
+	<bean id="httpProxy" class="org.tamacat.httpd.config.HttpProxyConfig">
+		<property name="proxyHost">
+			<value>localhost</value>
+		</property>
+		<property name="proxyPort">
+			<value>3128</value>
+		</property>
+		<property name="nonProxyHosts">
+			<value>localhost|127.0.0.1</value>
+		</property>
+	</bean>
+	
+	<bean id="UseProxyNoAuthReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property> 
+		<property name="httpFilter">
+			<ref bean="PerformanceCounterFilter" />
+		</property>
+		<property name="httpProxyConfig">
+			<ref bean="httpProxy" />
+		</property>
+		<property name="httpResponseInterceptor" mode="add">
+			<ref bean="html" />
+		</property>
+	</bean>
+	
+	<bean id="NoAuthReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHandler">
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+		<property name="httpFilter">
+			<ref bean="PerformanceCounterFilter" />
+		</property>
+		<property name="httpResponseInterceptor" mode="add">
+			<ref bean="html" />
+		</property>
+	</bean>
+	
+	<bean id="NoAuthReverseHandler2" class="org.tamacat.httpd.handler.HCReverseProxyHandler">
+		<property name="httpFilter">
+			<ref bean="AccessLogFilter" />
+		</property>
+		<property name="httpFilter">
+			<ref bean="PerformanceCounterFilter" />
+		</property>
+		<property name="httpResponseInterceptor" mode="add">
+			<ref bean="html" />
+		</property>
+	</bean>
+	
+	<bean id="html" class="org.tamacat.httpd.filter.HtmlLinkConvertInterceptor">
+		<property name="contentType">
+			<value>html</value>
+		</property>
+	</bean>
+</beans>

@@ -1,0 +1,29 @@
+#parse("htdocs/common/html-start.vm")
+<body>
+	<div id="wrap">
+		#parse("htdocs/common/top-menu.vm")
+		<div class="container">
+			<div id="min">
+				<h1>DOWNLOAD</h1>
+				<p>
+					<ul>
+						<li><h2>Download this software (java.net)</h2>
+							<a href="http://sourceforge.net/projects/tamacat/files/tamacat-httpd/" target="_blank">
+							<span>http://sourceforge.net/projects/tamacat/files/tamacat-httpd/</span></a>
+						</li>
+					</ul>
+				</p>
+				<p>
+					<ul>
+						<li><h2>SVN Repository (sourceforge.net)</h2>
+							<a href="https://svn.code.sf.net/p/tamacat/code/trunk/" target="_blank">
+							<span>https://svn.code.sf.net/p/tamacat/code/trunk/</span></a>
+						</li>
+					</ul>
+				</p>
+			</div>
+		</div>
+	</div>
+	#parse("htdocs/common/footer.vm")
+</body>
+#parse("htdocs/common/html-end.vm")

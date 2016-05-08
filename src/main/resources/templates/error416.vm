@@ -1,0 +1,10 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<html>
+  <head>
+    <title>416 Requested Range Not Satisfiable</title>
+  </head>
+  <body>
+    <h1>Requested Range Not Satisfiable</h1>
+    <p>The requested range not satisfiable on this server.</p>
+  </body>
+</html>

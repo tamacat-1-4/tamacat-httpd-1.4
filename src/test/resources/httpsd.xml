@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+
+	<bean id="gzip" class="org.tamacat.httpd.filter.GzipResponseInterceptor">
+		<property name="contentType">
+			<value>html,xml,css,javascript</value>
+		</property>
+	</bean>
+	
+	<bean id="server" class="org.tamacat.httpd.core.HttpEngine">
+		<property name="propertiesName">
+			<value>https-server.properties</value>
+		</property>
+		<property name="httpInterceptor">
+			<ref bean="gzip" />
+		</property>
+	</bean>
+
+</beans>

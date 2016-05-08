@@ -1,0 +1,11 @@
+<div id="header" class="container">
+	<div class="header">
+		<h2 class="navbar-brand text-muted">tamacat-httpd</h2>
+		<ul class="nav nav-pills pull-right">
+			<li><a href="${contextRoot}/index.html">Home</a></li>
+			<li><a href="${contextRoot}/news.html">News</a></li>
+			<li><a href="${contextRoot}/download.html">Download</a></li>
+			<li><a href="${contextRoot}/docs/index.html">Introduction</a></li>
+		</ul>
+	</div>
+</div>

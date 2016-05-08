@@ -1,0 +1,41 @@
+#parse("htdocs/common/html-start.vm")
+<body>
+	<div id="wrap">
+		#parse("htdocs/common/top-menu.vm")
+		<div class="container">
+			<div id="min">
+				<h1>NEWS</h1>
+				<p>
+					<ul>
+						<li><h2>Release 1.2 (2015-07-03)</h2>
+							<p>Refactoring and more simply design. Update HttpComponents 4.4 (HttpCore/HttpClient).</p>
+							<a href="https://sourceforge.net/p/tamacat/code/HEAD/tree/maven2/org/tamacat/tamacat-httpd/1.2/" target="_blank">
+							<span>https://sourceforge.net/p/tamacat/code/HEAD/tree/maven2/org/tamacat/tamacat-httpd/1.2/</span></a>
+						</li>
+					</ul>
+				</p>
+				<p>
+					<ul>
+						<li><h2>Release 1.1 (2014-03-25)</h2>
+							<p>Refactoring and more simply design. Update HttpComponents 4.3 (HttpCore/HttpClient).</p>
+							<a href="https://sourceforge.net/p/tamacat/code/HEAD/tree/maven2/org/tamacat/tamacat-httpd/1.1" target="_blank">
+							<span>https://sourceforge.net/p/tamacat/code/HEAD/tree/maven2/org/tamacat/tamacat-httpd/1.1/</span></a>
+						</li>
+					</ul>
+				</p>
+				<p>
+					<ul>
+						<li><h2>Release 1.0.6 (2013-07-01)</h2>
+							<p>The ReverseProxyHandler and WorkerThread support keep-alive connection. (Bugfix)<br />
+							The keepAliveTimeout property was added to ReverseProxyHandler. (default:30000 msec.)</p>
+						<a href="https://sourceforge.net/p/tamacat/code/HEAD/tree/maven2/org/tamacat/tamacat-httpd/1.0.6/" target="_blank">
+						<span>https://sourceforge.net/p/tamacat/code/HEAD/tree/maven2/org/tamacat/tamacat-httpd/1.0.6/</span></a>
+						</li>
+					</ul>
+				</p>
+			</div>
+		</div>
+	</div>
+	#parse("htdocs/common/footer.vm")
+</body>
+#parse("htdocs/common/html-end.vm")

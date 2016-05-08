@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly>
+  <id>bin</id>
+  <formats>
+    <format>zip</format>
+    <!-- <format>tar.gz</format> -->
+  </formats>
+  <fileSets>
+  <!--
+    <fileSet>
+      <directory>target</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+    </fileSet>
+    -->
+    <fileSet>
+      <includes>
+        <include>**/README*</include>
+        <include>**/LICENSE*</include>
+        <include>**/NOTICE*</include>
+        <include>**/*.txt</include>
+        <include>**/*.xml</include>
+        <include>**/*.properties</include>
+      </includes>
+
+    </fileSet>
+    <!-- javadoc -->
+    <fileSet>
+      <directory>target/site</directory>
+      <outputDirectory>docs</outputDirectory>
+      <includes>
+        <include>apidocs*/**</include>
+        <include>xref*/**</include>
+      </includes>
+    </fileSet>
+    
+  </fileSets>
+  <!-- 
+  <dependencySets>
+    <dependencySet>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <outputDirectory>/lib</outputDirectory>
+    </dependencySet>
+  </dependencySets>
+  -->
+</assembly>

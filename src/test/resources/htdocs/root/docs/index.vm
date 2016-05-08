@@ -1,0 +1,190 @@
+#parse("htdocs/common/html-start.vm")
+<body>
+	<div id="wrap">
+		#parse("htdocs/common/top-menu.vm")
+		<div class="container">
+			<div id="main">
+				<h1>INTRODUCTION (v1.2)</h1>
+				<h2>Download</h2>
+				<p>Download the archive file and extract. 
+					<ul>
+						<li><a href="http://sourceforge.net/projects/tamacat/files/tamacat-httpd/" target="_blank">http://sourceforge.net/projects/tamacat/files/tamacat-httpd/</a></li>
+					</ul>
+				</p>
+
+				<h2>Configuring httpd</h2>
+				<p>
+				Please make the following configuration files for the place where in CLASSPATH.
+				(It makes it referring to tamacat-httpd/conf.)
+				</p>
+
+				<ul>
+					<li><a href="#httpd.xml">httpd.xml</a></li>
+					<li><a href="#server.properties">server.properties</a></li>
+					<li><a href="#components.xml">components.xml</a></li>
+					<li><a href="#url-config.xml">url-config.xml</a></li>
+					<li><a href="#velocity.properties">velocity.properties (use by default it)</a></li>
+					<li><a href="#log4j.properties">log4j.properties (use by default it)</a></li>
+					<li><a href="#mime-types.properties">mime-types.properties (option)</a></li>
+				</ul>
+
+				<span class="top"><a href="#"><i class="icon-chevron-up"></i> TOP</a></span>
+				<h3 id="httpd.xml">httpd.xml <span class="label label-important">Required</span></h3>
+				<h4 id="httpd.xml-3">default (use server.properties)</h4>
+				<pre class="prettyprint linenums"><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans&gt;
+  &lt;bean id="server" class="org.tamacat.httpd.core.HttpEngine" /&gt;
+&lt;/beans&gt;
+</code></pre>
+
+				<h4 id="httpd.xml-2">use another server.properties</h4>
+				<pre class="prettyprint linenums"><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans&gt;
+  &lt;bean id="server" class="org.tamacat.httpd.core.HttpEngine"&gt;
+    &lt;property name="propertiesName"&gt;
+      &lt;value&gt;server-test.properties&lt;/value&gt;
+    &lt;/property&gt;
+  &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+
+				<h4 id="httpd.xml-3">use compression (use GzipResponseInterceptor)</h4>
+				<pre class="prettyprint linenums"><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans&gt;
+  &lt;bean id="gzip" class="org.tamacat.httpd.filter.GzipResponseInterceptor"&gt;
+    &lt;property name="contentType"&gt;
+      &lt;value&gt;html,xml,css,javascript&lt;/value&gt;
+    &lt;/property&gt;
+  &lt;/bean&gt;
+  &lt;bean id="server" class="org.tamacat.httpd.core.HttpEngine"&gt;
+    &lt;property name="propertiesName"&gt;
+      &lt;value&gt;server.properties&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property name="httpInterceptor"&gt;
+      &lt;ref bean="gzip" /&gt;
+    &lt;/property&gt;
+  &lt;/bean&gt;
+&lt;/beans&gt;
+</code></pre>
+				<span class="top"><a href="#"><i class="icon-chevron-up"></i> TOP</a></span>
+				<h3 id="server.properties">server.properties <span class="label label-important">Required</span></h3>
+				<pre class="prettyprint linenums"><code class="language-xml">ServerName=tamacat-httpd
+Port=80
+
+&#35;&#35;&#35; HTTPS configuration
+https=false
+https.keyStoreFile=test.keystore
+https.keyPassword=nopassword
+https.keyStoreType=JKS
+https.protocol=TLSv1_2
+https.support-protocols=TLSv1,TLSv1.1,TLSv1.2
+https.clientAuth=false
+
+&#35;&#35;&#35; HttpEngine/ServerConfig
+MaxServerThreads=50
+ServerSocketTimeout=30000
+ConnectionTimeout=5000
+ServerSocketBufferSize=8192
+
+&#35;&#35;&#35; KeepAliveConnReuseStrategy
+KeepAliveTimeout=30000
+KeepAliveRequests=1000
+
+&#35;&#35;&#35; WorkerThread
+WorkerThreadName=httpd
+WorkerThreadClientConnectionClose=true
+
+&#35;&#35;&#35; ReverseProxyHandler
+BackEndSocketTimeout=15000
+BackEndConnectionTimeout=5000
+BackEndSocketBufferSize=8192
+
+&#35;&#35;&#35; HCReverseProxyHandler
+BackEndMaxConnectons=20
+BackEndMaxPerRoute=100
+BackEndBacklogSize=0
+
+&#35;&#35;&#35; BackEndKeepAliveConnReuseStrategy
+BackEndKeepAlive=true
+BackEndKeepAliveTimeout=30000
+BackEndMaxKeepAliveRequests=1000
+
+&#35;&#35;&#35; Configuration files
+url-config.file=url-config.xml
+components.file=components.xml
+
+&#35;&#35;&#35; JMX Remote Service
+#JMX.server-url=service:jmx:rmi:///jndi/rmi://localhost:1099/httpd
+#JMX.objectname=org.tamacat.httpd:type=HttpEngine
+#JMX.rmi.port=1099
+</code></pre>
+
+<span class="top"><a href="#"><i class="icon-chevron-up"></i> TOP</a></span>
+<h3 id="url-config.xml">url-config.xml <span class="label label-important">Required</span></h3>
+<pre class="prettyprint linenums"><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;service-config&gt;
+  &lt;service&gt;
+    &lt;url path="/" type="normal" handler="DefaultHandler" /&gt;
+    &lt;url path="/examples/" type="reverse" handler="ReverseyHandler"&gt;
+      &lt;reverse&gt;http://localhost:8080/examples/&lt;/reverse&gt;
+    &lt;/url&gt;
+  &lt;/service&gt;
+&lt;/service-config&gt;
+</code></pre>
+
+<table class="table">
+  <tr>
+    <th>name</th><th>value</th><th>description</th>
+  </tr>
+  <tr>
+    <td>type</td><td>normal, reverse, lb</td>
+    <td>"normal" is standard web server. "reverse" is Reverse proxy.
+    "lb" is Load balancing with reverse proxy.</td>
+  </tr>
+  <tr>
+    <td>handler</td><td>The name of handler in components.xml</td>
+    <td>The Bean name in components.xml.
+  <tr>
+    <td>lb-method</td><td>The name of load balancing method for type="lb"</td>
+    <td>lb-method="RoundRobin" or "LeastConnection" default is "RoundRobin"</td>
+  </tr>
+</table>
+
+<span class="top"><a href="#"><i class="icon-chevron-up"></i> TOP</a></span>
+<h3 id="components.xml">components.xml <span class="label label-important">Required</span></h3>
+<pre class="prettyprint linenums"><code class="language-xml">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans&gt;
+  &lt;bean id="DefaultHandler" class="org.tamacat.httpd.handler.LocalFileHttpHandler" /&gt;
+  &lt;bean id="ReverseHandler" class="org.tamacat.httpd.handler.ReverseProxyHttpHandler" /&gt;
+&lt;/beans&gt;
+</code></pre>
+<table class="table">
+  <tr>
+    <th>class</th><th>description</th>
+  </tr>
+  <tr>
+    <td>org.tamacat.httpd.handler.LocalFileHttpHandler</td>
+    <td>returns local contents.<td>
+  </tr>
+  <tr>
+    <td>org.tamacat.httpd.handler.VelocityHttpHandler</td>
+    <td>returns local contents using velocity templates.<td>
+  </tr>
+  <tr>
+    <td>org.tamacat.httpd.handler.ReverseProxyHttpHandler</td>
+    <td>returns remote server contents.(Reverse Proxy)<td>
+  </tr>
+</table>
+
+
+			</div>
+		</div>
+	</div>
+<script>
+$(document).ready(function() {
+	prettyPrint();
+});
+</script>
+#parse("htdocs/common/footer.vm")
+</body>
+#parse("htdocs/common/html-end.vm")

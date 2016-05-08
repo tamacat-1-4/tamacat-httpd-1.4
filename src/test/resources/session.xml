@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+	<bean id="listener" class="org.tamacat.httpd.session.DebugSessionListener" />
+	<bean id="memorySessionStore" class="org.tamacat.httpd.session.MemorySessionStore" />
+	<bean id="fileSessionStore" class="org.tamacat.httpd.session.FileSessionStore" />
+
+	<bean id="session" class="org.tamacat.httpd.session.DefaultSessionFactory" singleton="true">
+		<property name="defaultMaxInactiveInterval">
+			<value>1800000</value>
+		</property>
+		<property name="sessionListener">
+			<ref bean="listener" />
+		</property>
+		<property name="sessionStore">
+			<ref bean="memorySessionStore" />
+		</property>
+	</bean>
+
+	<bean id="cleaner" class="org.tamacat.httpd.session.SessionCleaner">
+		<property name="checkInterval">
+			<value>60000</value>
+		</property>
+		<property name="name">
+			<value>Cleaner</value>
+		</property>
+	</bean>
+</beans>
