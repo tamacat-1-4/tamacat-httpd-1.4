@@ -16,7 +16,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.exception.UnauthorizedException;
-import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.util.StringUtils;
 import org.tamacat.util.UniqueCodeGenerator;
 
@@ -32,8 +31,7 @@ public class WSSEAuthProcessor extends AbstractAuthProcessor {
 
 	@Override
 	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
-		String path = RequestUtils.getRequestPath(request);
-		if (isFreeAccess(path) == false) {
+		if (isFreeAccess(request) == false) {
 			try {
 				String remoteUser = checkUser(request, response, context);
 				context.setAttribute(remoteUserKey, remoteUser);

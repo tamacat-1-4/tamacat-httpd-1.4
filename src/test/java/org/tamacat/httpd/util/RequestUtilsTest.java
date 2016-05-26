@@ -58,23 +58,23 @@ public class RequestUtilsTest {
 	}
 
 	@Test
-	public void testRequestPathString() throws Exception {
-		assertEquals("/", RequestUtils.getRequestPath("http://localhost/"));
-		assertEquals("/test", RequestUtils.getRequestPath("http://localhost/test"));
-		assertEquals("/test/", RequestUtils.getRequestPath("http://localhost/test/"));
-		assertEquals("/test?test=test", RequestUtils.getRequestPath("http://localhost/test?test=test"));
-		assertEquals("/", RequestUtils.getRequestPath("https://localhost/"));
+	public void testRequestPathWithQueryString() throws Exception {
+		assertEquals("/", RequestUtils.getRequestPathWithQuery("http://localhost/"));
+		assertEquals("/test", RequestUtils.getRequestPathWithQuery("http://localhost/test"));
+		assertEquals("/test/", RequestUtils.getRequestPathWithQuery("http://localhost/test/"));
+		assertEquals("/test?test=test", RequestUtils.getRequestPathWithQuery("http://localhost/test?test=test"));
+		assertEquals("/", RequestUtils.getRequestPathWithQuery("https://localhost/"));
 
-		assertEquals("/", RequestUtils.getRequestPath("http://localhost:8080/"));
-		assertEquals("/test/", RequestUtils.getRequestPath("http://localhost:8080/test/"));
-		assertEquals("http://localhost", RequestUtils.getRequestPath("http://localhost"));
-		assertEquals("ttp://localhost/", RequestUtils.getRequestPath("ttp://localhost/"));
-		assertEquals("http//localhost/", RequestUtils.getRequestPath("http//localhost/"));
+		assertEquals("/", RequestUtils.getRequestPathWithQuery("http://localhost:8080/"));
+		assertEquals("/test/", RequestUtils.getRequestPathWithQuery("http://localhost:8080/test/"));
+		assertEquals("http://localhost", RequestUtils.getRequestPathWithQuery("http://localhost"));
+		assertEquals("ttp://localhost/", RequestUtils.getRequestPathWithQuery("ttp://localhost/"));
+		assertEquals("http//localhost/", RequestUtils.getRequestPathWithQuery("http//localhost/"));
 
-		assertEquals("/", RequestUtils.getRequestPath("/"));
-		assertEquals("/test", RequestUtils.getRequestPath("/test"));
-		assertEquals("/test/", RequestUtils.getRequestPath("/test/"));
-		assertEquals("", RequestUtils.getRequestPath(""));
+		assertEquals("/", RequestUtils.getRequestPathWithQuery("/"));
+		assertEquals("/test", RequestUtils.getRequestPathWithQuery("/test"));
+		assertEquals("/test/", RequestUtils.getRequestPathWithQuery("/test/"));
+		assertEquals("", RequestUtils.getRequestPathWithQuery(""));
 	}
 
 	@Test
@@ -93,8 +93,8 @@ public class RequestUtilsTest {
 
 	@Test
 	public void testGetRequestPath() {
-		assertEquals("/test.html", RequestUtils.getRequestPath(new BasicHttpRequest("GET", "/test.html")));
-		assertEquals("/test.html", RequestUtils.getRequestPath(new BasicHttpRequest("GET", "/test.html?id=test")));
+		assertEquals("/test.html", RequestUtils.getPath(new BasicHttpRequest("GET", "/test.html")));
+		assertEquals("/test.html", RequestUtils.getPath(new BasicHttpRequest("GET", "/test.html?id=test")));
 	}
 
 	@Test

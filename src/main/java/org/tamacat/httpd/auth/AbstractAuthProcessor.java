@@ -14,6 +14,7 @@ import org.tamacat.httpd.exception.UnauthorizedException;
 import org.tamacat.httpd.filter.RequestFilter;
 import org.tamacat.httpd.filter.ResponseFilter;
 import org.tamacat.httpd.filter.acl.FreeAccessControl;
+import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
@@ -94,6 +95,10 @@ public abstract class AbstractAuthProcessor implements RequestFilter, ResponseFi
 		this.freeAccessControl.setFreeAccessExtensions(extensions);
 	}
 
+	protected boolean isFreeAccess(HttpRequest request) {
+		return isFreeAccess(RequestUtils.getPath(request));
+	}
+	
 	protected boolean isFreeAccess(String path) {
 		return freeAccessControl.isFreeAccess(path);
 	}

@@ -53,7 +53,7 @@ public class LocalFileStreamingHttpHandler extends LocalFileHttpHandler {
 	public void doRequest(HttpRequest request, HttpResponse response, HttpContext context)
 			throws HttpException, IOException {
 		
-		String path = RequestUtils.getRequestPath(request);
+		String path = RequestUtils.getPath(request);
 		if (path.endsWith("/") && useDirectoryListings() == false) {
 			path = path + welcomeFile;
 		}

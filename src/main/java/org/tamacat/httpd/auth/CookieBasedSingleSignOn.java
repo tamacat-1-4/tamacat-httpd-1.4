@@ -105,6 +105,10 @@ public class CookieBasedSingleSignOn implements SingleSignOn {
 		}
 		return false;
 	}
+	
+	protected boolean isFreeAccessExtensions(HttpRequest request) {
+		return isFreeAccessExtensions(RequestUtils.getPath(request));
+	}
 
 	/**
 	 * The extension skipping by the certification in comma seperated values.
@@ -140,7 +144,7 @@ public class CookieBasedSingleSignOn implements SingleSignOn {
 		if (StringUtils.isNotEmpty(user)) {
 			return true;
 		}
-		String path = RequestUtils.getRequestPath(request);
+		String path = RequestUtils.getPath(request);
 		if (isFreeAccessExtensions(path)) {
 			return true;
 		}

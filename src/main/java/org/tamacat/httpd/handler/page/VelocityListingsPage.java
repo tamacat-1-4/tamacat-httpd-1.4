@@ -94,9 +94,9 @@ public class VelocityListingsPage {
 			HttpRequest request, HttpResponse response,
 			VelocityContext context, File file) {
 		try {
-			context.put("url", URLDecoder.decode(RequestUtils.getRequestPath(request),"UTF-8"));
+			context.put("url", URLDecoder.decode(RequestUtils.getPath(request),"UTF-8"));
 		} catch (Exception e) {
-			context.put("url", RequestUtils.getRequestPath(request));
+			context.put("url", RequestUtils.getPath(request));
 		}
 
 		if (request.getRequestLine().getUri().lastIndexOf('/') >= 0) {

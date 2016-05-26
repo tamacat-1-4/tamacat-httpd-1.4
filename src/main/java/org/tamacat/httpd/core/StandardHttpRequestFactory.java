@@ -63,7 +63,7 @@ public class StandardHttpRequestFactory extends DefaultHttpRequestFactory {
 
 	public HttpRequest newHttpRequest(final String method, String uri)
 			throws MethodNotSupportedException {
-		uri = RequestUtils.getRequestPath(uri);
+		uri = RequestUtils.getRequestPathWithQuery(uri);
 		if (isOneOf(RFC2616_COMMON_METHODS, method)) {
 			return new BasicHttpRequest(method, uri);
 		} else if (isOneOf(RFC2616_ENTITY_ENC_METHODS, method)) {

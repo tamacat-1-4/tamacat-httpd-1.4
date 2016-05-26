@@ -132,7 +132,7 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 		if (ctx == null) {
 			ctx = new VelocityContext();
 		}
-		String path = RequestUtils.getRequestPath(request);
+		String path = RequestUtils.getPath(request);
 		ctx.put("param", RequestUtils.getParameters(context).getParameterMap());
 		ctx.put("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 		if (isMatchUrlPattern(path)) {

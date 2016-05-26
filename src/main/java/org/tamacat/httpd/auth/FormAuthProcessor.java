@@ -149,7 +149,7 @@ public class FormAuthProcessor extends AbstractAuthProcessor {
 		String sessionId = HeaderUtils.getCookieValue(request, sessionCookieName);
 		try {
 			String remoteUser = null;
-			String path = RequestUtils.getRequestPath(request);
+			String path = RequestUtils.getPath(request);
 			if (path.endsWith(loginPageUrl)) {
 				logoutAction(request, sessionId);
 				return;

@@ -12,7 +12,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.exception.UnauthorizedException;
-import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.util.StringUtils;
 import org.tamacat.util.UniqueCodeGenerator;
 
@@ -68,8 +67,7 @@ public class DigestAuthProcessor extends AbstractAuthProcessor {
 			response.setStatusCode(HttpStatus.SC_NO_CONTENT);
 			return;
 		}
-		String path = RequestUtils.getRequestPath(request);
-		if (isFreeAccess(path) == false) {
+		if (isFreeAccess(request) == false) {
 			try {
 				String remoteUser = checkUser(request, response, context);
 				context.setAttribute(remoteUserKey, remoteUser);
@@ -97,7 +95,6 @@ public class DigestAuthProcessor extends AbstractAuthProcessor {
 		if (digestAuthLine != null && StringUtils.isNotEmpty(digestAuthLine.getValue())) {
 			String line = digestAuthLine.getValue().replaceFirst("Digest ", "");
 			Digest digest = new Digest(line);
-
 			if (authComponent != null) {
 				AuthUser user = authComponent.getAuthUser(digest.getUsername(), context);
 				if (user == null) {

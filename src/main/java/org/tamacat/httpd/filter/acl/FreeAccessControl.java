@@ -7,6 +7,8 @@ package org.tamacat.httpd.filter.acl;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.http.HttpRequest;
+import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
@@ -31,7 +33,11 @@ public class FreeAccessControl {
 			this.path = path.trim().replaceFirst("/$", "");
 		}
 	}
-
+	
+	public boolean isFreeAccess(HttpRequest request) {
+		return isFreeAccess(RequestUtils.getPath(request));
+	}
+	
 	/**
 	 * Whether it agrees to the extension or path that can be accessed without the
 	 * attestation is inspected.
@@ -44,9 +50,7 @@ public class FreeAccessControl {
 	
 	public boolean isFreeAccessExtension(String urlPath) {
 		if (freeAccessExtensions.size() > 0) {
-			if (urlPath.indexOf('?')>=0) {
-				urlPath = urlPath.substring(0, urlPath.indexOf('?'));
-			}
+			urlPath = RequestUtils.getPath(urlPath); //without query string
 			int idx = urlPath.lastIndexOf(".");
 			if (idx >= 0) {
 				String ext = urlPath.substring(idx + 1, urlPath.length()).toLowerCase().trim();
@@ -58,6 +62,7 @@ public class FreeAccessControl {
 
 	public boolean isFreeAccessUrl(String urlPath) {
 		if (this.path != null && freeAccessUrls.size() > 0) {
+			urlPath = RequestUtils.getPath(urlPath);
 			for (String freeAccessUrl : freeAccessUrls) {
 				if (urlPath.startsWith(this.path + "/" + freeAccessUrl)) {
 					return true;

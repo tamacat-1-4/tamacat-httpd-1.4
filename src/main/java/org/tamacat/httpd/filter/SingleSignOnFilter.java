@@ -11,7 +11,6 @@ import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.auth.AbstractAuthProcessor;
 import org.tamacat.httpd.exception.UnauthorizedException;
 import org.tamacat.httpd.util.HeaderUtils;
-import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
@@ -55,8 +54,7 @@ public class SingleSignOnFilter extends AbstractAuthProcessor {
 				LOG.trace("Set-Cookie: " + singleSignOnCookieName + "=" + remoteUser + "; Path=/");
 			}
 		} else {
-			String path = RequestUtils.getRequestPath(request);
-			if (isFreeAccess(path) == false) {
+			if (isFreeAccess(request) == false) {
 				throw new UnauthorizedException();
 			}
 		}

@@ -50,7 +50,7 @@ public class RequestUtils {
 	
 	public static RequestLine getRequestLine(RequestLine requestline) {
 		String uri = requestline.getUri();
-		String path = getRequestPath(uri);
+		String path = getRequestPathWithQuery(uri);
 		if (uri.equals(path)) {
 			return requestline;
 		} else {
@@ -66,10 +66,10 @@ public class RequestUtils {
 	}
 
 	/**
-	 * Get request absolute URI to Path
+	 * Get request absolute URI to Path (With Query)
 	 * @param uri
 	 */
-	public static String getRequestPath(final String uri) {
+	public static String getRequestPathWithQuery(final String uri) {
 		try {
 			if (uri.indexOf("http")==0 && uri.indexOf("://")>0) {
 				int idx = uri.indexOf("://");
@@ -83,13 +83,21 @@ public class RequestUtils {
 		return uri;
 	}
 
-	public static String getRequestPath(HttpRequest request) {
-		String path = request.getRequestLine().getUri();
-		if (path.indexOf('?') >= 0) {
-			String[] requestParams = path.split("\\?");
-			return requestParams[0];
+	public static String getPath(String uri) {
+		int index = uri.indexOf('?');
+		if (index != -1) {
+			uri = uri.substring(0, index);
+		} else {
+			index = uri.indexOf('#');
+			if (index != -1) {
+				uri = uri.substring(0, index);
+			}
 		}
-		return path;
+		return uri;
+	}
+	
+	public static String getPath(HttpRequest request) {
+		return getPath(request.getRequestLine().getUri());
 	}
 
 	public static void setParameter(HttpContext context, String name, String... values) throws IOException {

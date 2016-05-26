@@ -39,7 +39,7 @@ public class BasicAuthProcessor extends AbstractAuthProcessor {
 			response.setStatusCode(HttpStatus.SC_NO_CONTENT);
 			return;
 		}
-		String path = RequestUtils.getRequestPath(request);
+		String path = RequestUtils.getPath(request);
 		if (isFreeAccess(path) == false) {
 			try {
 				String remoteUser = checkUser(request, response, context);
