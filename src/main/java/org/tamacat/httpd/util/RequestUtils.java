@@ -105,8 +105,9 @@ public class RequestUtils {
 		parameters.setParameter(name, values);
 	}
 
-	public static void setParameters(
-			HttpRequest request, HttpContext context, String encoding) {
+	public static void setParameters(HttpRequest request, HttpContext context, String encoding) {
+		if (context.getAttribute(REQUEST_PARAMETERS_CONTEXT_KEY) != null) return;
+		
 		String path = request.getRequestLine().getUri();
 		//String path = docsRoot + request.getRequestLine().getUri();
 		RequestParameters parameters = getParameters(context);
@@ -160,6 +161,15 @@ public class RequestUtils {
 		context.setAttribute(REQUEST_PARAMETERS_CONTEXT_KEY, parameters);
 	}
 
+	/**
+	 * Get Request parameters
+	 * @since 1.4
+	 */
+	public static RequestParameters getParameters(HttpRequest request, HttpContext context, String encoding) {
+		setParameters(request, context, encoding);
+		return getParameters(context);
+	}
+	
 	public static RequestParameters getParameters(HttpContext context) {
 		synchronized (context) {
 			RequestParameters params = (RequestParameters) context.getAttribute(REQUEST_PARAMETERS_CONTEXT_KEY);

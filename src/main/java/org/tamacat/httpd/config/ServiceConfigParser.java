@@ -50,6 +50,8 @@ public class ServiceConfigParser {
 	static final String REVERSE = "reverse";
 	static final String HANDLER = "handler";
 	static final String LB_METHOD = "lb-method";
+	static final String COMPONENTS = "components"; //@since 1.4
+	static final String LOADER = "loader"; //@since 1.4
 	
 	static final String URL_CONFIG = "url-config.xml";
 	protected ServerConfig serverConfig;
@@ -118,6 +120,7 @@ public class ServiceConfigParser {
 				if (serviceUrl.isType(ServiceType.LB)) {
 					serviceUrl = getLbServiceUrl(serviceUrl, urlNode, host);
 				}
+				
 				serviceConfig.addServiceUrl(serviceUrl);
 			}
 		}
@@ -160,6 +163,16 @@ public class ServiceConfigParser {
 			Node handler = urlAttrs.getNamedItem(HANDLER);
 			if (StringUtils.isNotEmpty(handler)) {					
 				serviceUrl.setHandlerName(handler.getNodeValue());
+			}
+			Node config = urlAttrs.getNamedItem(COMPONENTS);
+			if (StringUtils.isNotEmpty(config)) {
+				serviceUrl.setComponentConfig(config.getNodeValue());
+			}
+			Node loader = urlAttrs.getNamedItem(LOADER);
+			if (StringUtils.isNotEmpty(loader)) {
+				serviceUrl.setClassLoader(loader.getNodeValue());
+			} else {
+				serviceUrl.setClassLoader(getClass().getClassLoader());
 			}
 			serviceUrl.setHost(getURL(host));
 		}

@@ -4,8 +4,10 @@
  */
 package org.tamacat.httpd.config;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLClassLoader;
 
 import org.tamacat.httpd.handler.HttpHandler;
 
@@ -22,6 +24,9 @@ public class ServiceUrl {
 	private ServerConfig serverConfig;
 	private String loadBalancerMethod = "RoundRobin";
 
+	protected String componentConfig = "components.xml";
+	protected ClassLoader loader;
+	
 	/**
 	 * <p>Constructor for ServiceConfig.
 	 * @param serverConfig
@@ -151,5 +156,40 @@ public class ServiceUrl {
 
 	public void setLoadBalancerMethod(String loadBalancerMethod) {
 		this.loadBalancerMethod = loadBalancerMethod;
+	}
+	
+	public void setComponentConfig(String componentConfig) {
+		this.componentConfig = componentConfig;
+	}
+	
+	public String getComponentConfig() {
+		return componentConfig;
+	}
+	
+	public void setClassLoader(String loader) {
+		this.loader = createClassLoader(loader);
+		//Class<?> c = ClassUtils.forName(loader, getClass().getClassLoader());
+		//this.loader = (ClassLoader) ClassUtils.newInstance(c);
+	}
+	
+	public void setClassLoader(ClassLoader loader) {
+		this.loader = loader;
+	}
+	
+	public ClassLoader getClassLoader() {
+		return loader;
+	}
+	
+	public static ClassLoader createClassLoader(String dirname) {
+		URL[] url = new URL[1];
+		if (dirname.endsWith("/") == false) {
+			dirname = dirname + "/";
+		}
+		try {
+			url[0] = new File(dirname).toURI().toURL();
+			return new URLClassLoader(url, ClassLoader.getSystemClassLoader());
+		} catch (MalformedURLException e) {
+			return null;
+		}
 	}
 }
