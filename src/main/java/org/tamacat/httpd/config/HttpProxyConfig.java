@@ -102,4 +102,21 @@ public class HttpProxyConfig {
 	public void setNonProxyHosts(String nonProxyHosts) {
 		this.nonProxyHosts = nonProxyHosts;
 	}
+	
+	public void setProxy() {
+		if (isDirect() == false) {
+			HttpHost proxy = getProxyHttpHost();
+			System.setProperty("http.proxyHost", proxy.getHostName());
+			System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
+			System.setProperty("http.proxyUser", getCredentials().getUserPrincipal().getName());
+			System.setProperty("http.proxyPassword", getCredentials().getPassword());
+			System.setProperty("http.nonProxyHosts", getNonProxyHosts());
+			
+			System.setProperty("https.proxyHost", proxy.getHostName());
+			System.setProperty("https.proxyPort", String.valueOf(proxy.getPort()));
+			System.setProperty("https.proxyUser", getCredentials().getUserPrincipal().getName());
+			System.setProperty("https.proxyPassword", getCredentials().getPassword());
+			System.setProperty("https.nonProxyHosts", getNonProxyHosts());
+		}
+	}
 }

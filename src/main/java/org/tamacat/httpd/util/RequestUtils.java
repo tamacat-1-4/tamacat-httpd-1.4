@@ -100,6 +100,72 @@ public class RequestUtils {
 		return getPath(request.getRequestLine().getUri());
 	}
 
+	public static RequestParameters parseParameters(HttpRequest request, HttpContext context, String encoding) {
+		synchronized (context) {
+			RequestParameters parameters = (RequestParameters) context.getAttribute(REQUEST_PARAMETERS_CONTEXT_KEY);
+			if (parameters != null) {
+				try {
+					RequestParameters params = parseParameters(request, encoding);
+					parameters = params;
+				} catch (Exception e) {
+					//ALREADY PARSED REQUEST.
+				}
+			} else {
+				parameters = parseParameters(request, encoding);
+			}
+			context.setAttribute(REQUEST_PARAMETERS_CONTEXT_KEY, parameters);
+			return parameters;
+		}
+	}
+	
+	public static RequestParameters parseParameters(HttpRequest request, String encoding) {
+		RequestParameters parameters = new RequestParameters();
+		String path = request.getRequestLine().getUri();
+		if (path.indexOf('?') >= 0) {
+			String[] requestParams = path.split("\\?");
+			//set request parameters for Custom HttpRequest.
+			if (requestParams.length >= 2) {
+				String params = requestParams[1];
+				String[] param = params.split("&");
+				for (String kv : param) {
+					String[] p = kv.split("=");
+					if (p.length >=2) {
+						try {
+							parameters.setParameter(p[0], URLDecoder.decode(p[1], encoding));
+						} catch (Exception e) {
+						}
+					}
+				}
+			}
+		}
+		if (isEntityEnclosingRequest(request) && ! RequestUtils.isMultipart(request)) {
+			HttpEntity entity = getEntity(request);
+			if (entity != null) {
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent()))) {
+					String s;
+					StringBuilder sb = new StringBuilder();
+					while ((s = reader.readLine()) != null) {
+						sb.append(s);
+					}
+					String[] params = sb.toString().split("&");
+					for (String param : params) {
+						String[] keyValue = param.split("=");
+						if (keyValue.length >= 2) {
+							try {
+								parameters.setParameter(keyValue[0],
+									URLDecoder.decode(keyValue[1], encoding));
+							} catch (Exception e) {
+							}
+						}
+					}
+				} catch (IOException e) {
+					throw new HttpException(BasicHttpStatus.SC_BAD_REQUEST, e);
+				}
+			}
+		}
+		return parameters;
+	}
+	
 	public static void setParameter(HttpContext context, String name, String... values) throws IOException {
 		RequestParameters parameters = getParameters(context);
 		parameters.setParameter(name, values);
