@@ -133,7 +133,7 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 			ctx = new VelocityContext();
 		}
 		String path = RequestUtils.getPath(request);
-		ctx.put("param", RequestUtils.getParameters(context).getParameterMap());
+		ctx.put("param", RequestUtils.parseParameters(request, context, encoding).getParameterMap());
 		ctx.put("contextRoot", serviceUrl.getPath().replaceFirst("/$", ""));
 		if (isMatchUrlPattern(path)) {
 			// delete the extention of file name. (index.html -> index)

@@ -81,7 +81,7 @@ public class RequestUtilsTest {
 	public void testSetParameters() throws Exception {
 		HttpEntityEnclosingRequest request = new BasicHttpEntityEnclosingRequest("POST", "/test.html");
 		request.setEntity(new StringEntity("<html></html>"));
-		RequestUtils.setParameters(request, context, "UTF-8");
+		RequestUtils.parseParameters(request, context, "UTF-8");
 	}
 
 	@Test

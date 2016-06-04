@@ -133,7 +133,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 			return;
 		}
 		if (parseRequestParameters) {
-			RequestUtils.setParameters(request, context, encoding);
+			RequestUtils.parseParameters(request, context, encoding);
 		}
 		try {
 			for (RequestFilter filter : requestFilters) {

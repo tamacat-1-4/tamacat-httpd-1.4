@@ -89,8 +89,9 @@ public class FormAuthProcessorTest {
 		//login (NG)
 		try {
 			context = new BasicHttpContext();
-			RequestUtils.setParameter(context, "username", "");
-			RequestUtils.setParameter(context, "password", "");
+			RequestUtils.parseParameters(request, context, "UTF-8")
+				.addParam("username", "").addParam("password", "");
+			
 			auth.checkUser(request, response, context);
 			fail();
 		} catch (UnauthorizedException e) {
@@ -100,8 +101,8 @@ public class FormAuthProcessorTest {
 		//login (NG)
 		try {
 			context = new BasicHttpContext();
-			RequestUtils.setParameter(context, "username", "admin");
-			RequestUtils.setParameter(context, "password", "xxxx");
+			RequestUtils.parseParameters(request, context, "UTF-8")
+				.addParam("username", "admin").addParam("password", "xxxx");
 			auth.checkUser(request, response, context);
 			fail();
 		} catch (UnauthorizedException e) {
@@ -111,8 +112,8 @@ public class FormAuthProcessorTest {
 		//login (NG)
 		try {
 			context = new BasicHttpContext();
-			RequestUtils.setParameter(context, "username", "test");
-			RequestUtils.setParameter(context, "password", "pass");
+			RequestUtils.parseParameters(request, context, "UTF-8")
+				.addParam("username", "test").addParam("password", "pass");
 			auth.checkUser(request, response, context);
 			fail();
 		} catch (UnauthorizedException e) {
@@ -121,8 +122,8 @@ public class FormAuthProcessorTest {
 		
 		//login
 		context = new BasicHttpContext();
-		RequestUtils.setParameter(context, "username", "admin");
-		RequestUtils.setParameter(context, "password", "pass");
+		RequestUtils.parseParameters(request, context, "UTF-8")
+			.addParam("username", "admin").addParam("password", "pass");
 		auth.checkUser(request, response, context);
 	}
 

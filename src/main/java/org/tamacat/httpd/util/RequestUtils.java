@@ -35,12 +35,16 @@ import org.tamacat.httpd.exception.HttpException;
 import org.tamacat.util.StringUtils;
 
 public class RequestUtils {
+	
+	static final String HTTP_REQUEST_PARAMETERS = "http.request.parameters";
 
+	@Deprecated
+	static final String REQUEST_PARAMETERS_CONTEXT_KEY = "HttpRequest.RequestParameters";
+	
 	public static final String X_FORWARDED_FOR = "X-Forwarded-For";
 	public static final String REMOTE_ADDRESS = "remote_address";
 
 	static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
-	static final String REQUEST_PARAMETERS_CONTEXT_KEY = "RequestParameters";
 
 	public static String getRequestLine(HttpRequest request) {
 		return request.getRequestLine().getMethod() + " "
@@ -102,7 +106,7 @@ public class RequestUtils {
 
 	public static RequestParameters parseParameters(HttpRequest request, HttpContext context, String encoding) {
 		synchronized (context) {
-			RequestParameters parameters = (RequestParameters) context.getAttribute(REQUEST_PARAMETERS_CONTEXT_KEY);
+			RequestParameters parameters = (RequestParameters) context.getAttribute(HTTP_REQUEST_PARAMETERS);
 			if (parameters != null) {
 				try {
 					RequestParameters params = parseParameters(request, encoding);
@@ -113,7 +117,7 @@ public class RequestUtils {
 			} else {
 				parameters = parseParameters(request, encoding);
 			}
-			context.setAttribute(REQUEST_PARAMETERS_CONTEXT_KEY, parameters);
+			context.setAttribute(HTTP_REQUEST_PARAMETERS, parameters);
 			return parameters;
 		}
 	}
@@ -171,8 +175,9 @@ public class RequestUtils {
 		parameters.setParameter(name, values);
 	}
 
+	@Deprecated
 	public static void setParameters(HttpRequest request, HttpContext context, String encoding) {
-		if (context.getAttribute(REQUEST_PARAMETERS_CONTEXT_KEY) != null) return;
+		if (context.getAttribute(HTTP_REQUEST_PARAMETERS) != null) return;
 		
 		String path = request.getRequestLine().getUri();
 		//String path = docsRoot + request.getRequestLine().getUri();
@@ -224,7 +229,7 @@ public class RequestUtils {
 	}
 
 	public static void setParameters(HttpContext context, RequestParameters parameters) {
-		context.setAttribute(REQUEST_PARAMETERS_CONTEXT_KEY, parameters);
+		context.setAttribute(HTTP_REQUEST_PARAMETERS, parameters);
 	}
 
 	/**
@@ -237,14 +242,7 @@ public class RequestUtils {
 	}
 	
 	public static RequestParameters getParameters(HttpContext context) {
-		synchronized (context) {
-			RequestParameters params = (RequestParameters) context.getAttribute(REQUEST_PARAMETERS_CONTEXT_KEY);
-			if (params == null) {
-				params = new RequestParameters();
-				context.setAttribute(REQUEST_PARAMETERS_CONTEXT_KEY, params);
-			}
-			return params;
-		}
+		return (RequestParameters) context.getAttribute(HTTP_REQUEST_PARAMETERS);
 	}
 
 	public static String getParameter(HttpContext context, String name) {

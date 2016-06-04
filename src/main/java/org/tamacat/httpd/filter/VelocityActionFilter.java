@@ -23,6 +23,7 @@ public class VelocityActionFilter implements RequestFilter {
 	private String processKeyName = "p";
 	private String prefix = "";
 	private String suffix = "";
+	private String encoding = "UTF-8";
 	private static final Class<?>[] PARAMS = new Class<?>[] { RequestContext.class };
 
 	public ServiceUrl getServiceUrl() {
@@ -72,6 +73,7 @@ public class VelocityActionFilter implements RequestFilter {
 	@Override
 	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
 		VelocityContext ctx = new VelocityContext();
+		RequestUtils.parseParameters(request, context, encoding);
 		String action = RequestUtils.getParameter(context, actionKeyName);
 		String process = RequestUtils.getParameter(context, processKeyName);
 		if (action == null) {

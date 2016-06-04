@@ -37,6 +37,7 @@ public class DefaultWorker implements Worker {
 	static final String HTTP_IN_CONN = "http.in-conn";
 	static final String HTTP_OUT_CONN = "http.out-conn";
 	static final String HTTP_CONN_KEEPALIVE = "http.proxy.conn-keepalive";
+	static final String HTTP_REQUEST_PARAMETERS = "http.request.parameters";
 
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;
@@ -97,6 +98,8 @@ public class DefaultWorker implements Worker {
 			HttpConnectionMetrics metrics = this.conn.getMetrics();
 			while (Thread.interrupted()==false) {
 				HttpContext context = parent;//new BasicHttpContext(parent);
+				context.removeAttribute(HTTP_REQUEST_PARAMETERS); //reset request
+				
 				if (!conn.isOpen()) {
 					//shutdown client connection.
 					shutdownClient(getClientHttpConnection(context));

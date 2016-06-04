@@ -15,6 +15,10 @@ public class RequestParameters {
 	private Map<String, List<String>> params = new LinkedHashMap<>();
 
 	public void setParameter(String name, String... values) {
+		addParam(name, values);
+	}
+	
+	public RequestParameters addParam(String name, String... values) {
 		if (name != null) {
 			List<String> valueList = getValueList(name);
 			if (values == null) {
@@ -30,6 +34,7 @@ public class RequestParameters {
 				}
 			}
 		}
+		return this;
 	}
 
 	public String getParameter(String name) {
