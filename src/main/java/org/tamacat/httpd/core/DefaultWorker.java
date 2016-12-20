@@ -87,30 +87,31 @@ public class DefaultWorker implements Worker {
 
 	@Override
 	public void run() {
-		HttpContext parent = new BasicHttpContext();
-		// Bind connection objects to the execution context
-		parent.setAttribute(HTTP_IN_CONN, conn);
+		HttpContext parent = new BasicHttpContext(); //for client connection keep-alive.
 		try {
 			countUp();
 			this.conn.bind(socket);
 			LOG.debug("bind - " + conn);
-
+			
 			HttpConnectionMetrics metrics = this.conn.getMetrics();
 			while (Thread.interrupted()==false) {
-				HttpContext context = parent;//new BasicHttpContext(parent);
-				context.removeAttribute(HTTP_REQUEST_PARAMETERS); //reset request
-				
+				HttpContext context = new BasicHttpContext();
 				if (!conn.isOpen()) {
 					//shutdown client connection.
-					shutdownClient(getClientHttpConnection(context));
+					shutdownClient(getClientHttpConnection(parent));
 					break;
+				} else {
+					//Bind connection objects to the execution context
+					context.setAttribute(HTTP_IN_CONN, conn);
+					//reuse and remove HTTP_OUT_CONN
+					context.setAttribute(HTTP_OUT_CONN, parent.removeAttribute(HTTP_OUT_CONN));
 				}
 				if (LOG.isDebugEnabled()){
 					LOG.debug("count:" + metrics.getRequestCount() +  " - " + conn);
 				}
 				this.httpService.handleRequest(conn, context);
 				
-				ClientHttpConnection clientConn = getClientHttpConnection(context);
+				ClientHttpConnection clientConn = getClientHttpConnection(context);  //set from handleRequest()
 				boolean reuseClientConn = isClientConnectionKeepAlive(clientConn, context);
 				if (reuseClientConn) {
 					parent.setAttribute(HTTP_OUT_CONN, clientConn);
