@@ -37,7 +37,6 @@ public class DefaultWorker implements Worker {
 	static final String HTTP_IN_CONN = "http.in-conn";
 	static final String HTTP_OUT_CONN = "http.out-conn";
 	static final String HTTP_CONN_KEEPALIVE = "http.proxy.conn-keepalive";
-	static final String HTTP_REQUEST_PARAMETERS = "http.request.parameters";
 
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;
@@ -89,21 +88,21 @@ public class DefaultWorker implements Worker {
 	public void run() {
 		HttpContext parent = new BasicHttpContext(); //for client connection keep-alive.
 		try {
-			countUp();
 			this.conn.bind(socket);
 			LOG.debug("bind - " + conn);
 			
 			HttpConnectionMetrics metrics = this.conn.getMetrics();
 			while (Thread.interrupted()==false) {
+				countUp();
 				HttpContext context = new BasicHttpContext();
 				if (!conn.isOpen()) {
 					//shutdown client connection.
 					shutdownClient(getClientHttpConnection(parent));
 					break;
 				} else {
-					//Bind connection objects to the execution context
+					//Bind server connection objects to the execution context
 					context.setAttribute(HTTP_IN_CONN, conn);
-					//reuse and remove HTTP_OUT_CONN
+					//reuse and remove client connection (using reverse proxy keep-alive)
 					context.setAttribute(HTTP_OUT_CONN, parent.removeAttribute(HTTP_OUT_CONN));
 				}
 				if (LOG.isDebugEnabled()){
@@ -111,7 +110,7 @@ public class DefaultWorker implements Worker {
 				}
 				this.httpService.handleRequest(conn, context);
 				
-				ClientHttpConnection clientConn = getClientHttpConnection(context);  //set from handleRequest()
+				ClientHttpConnection clientConn = getClientHttpConnection(context); //set from handleRequest (reverse proxy)
 				boolean reuseClientConn = isClientConnectionKeepAlive(clientConn, context);
 				if (reuseClientConn) {
 					parent.setAttribute(HTTP_OUT_CONN, clientConn);
@@ -125,13 +124,13 @@ public class DefaultWorker implements Worker {
 					//close client connection. (keep-alive off)
 					shutdownClient(clientConn);
 				}
+				DC.remove(); //delete Logging context.
+				countDown();
 			}
 		} catch (Exception e) {
 			handleException(e);
 		} finally {
 			shutdown(conn);
-			countDown();
-			DC.remove();
 		}
 	}
 	
