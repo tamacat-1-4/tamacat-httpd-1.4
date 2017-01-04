@@ -30,10 +30,11 @@ public class PerformanceCounterFilter implements RequestFilter, ResponseFilter {
 	}
 
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response,
-			HttpContext context) {
+	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {
+		
 		BasicCounter counter = urlCounter.getCounter(getPath(serviceUrl));
 		if (counter != null) counter.countUp();
+		//System.out.println(counter);
 	}
 
 	@Override
@@ -47,6 +48,7 @@ public class PerformanceCounterFilter implements RequestFilter, ResponseFilter {
 			HttpContext context) {
 		BasicCounter counter = urlCounter.getCounter(getPath(serviceUrl));
 		if (counter != null) counter.countDown();
+		//System.out.println(counter);
 	}
 
 	/**

@@ -22,7 +22,7 @@ public class BasicCounter implements PerformanceCounterMonitor, Serializable {
 
 	private static final long serialVersionUID = 6089725451626828983L;
 
-	private static ThreadLocal<Long> time = new ThreadLocal<Long>() {
+	private static final ThreadLocal<Long> TIME = new ThreadLocal<Long>() {
 		@Override
 		protected Long initialValue() {
 			return System.currentTimeMillis();
@@ -60,17 +60,17 @@ public class BasicCounter implements PerformanceCounterMonitor, Serializable {
 
 	@Override
 	public int countUp() {
-		time.set(System.currentTimeMillis());
+		TIME.set(System.currentTimeMillis());
 		return activeConnections.incrementAndGet();
 	}
 
 	@Override
 	public int countDown() {
-		Long start = time.get();
+		Long start = TIME.get();
 		if (start != null) {
 			setResponseTime(System.currentTimeMillis() - start);
 		}
-		time.remove();
+		TIME.remove();
 		return activeConnections.decrementAndGet();
 	}
 

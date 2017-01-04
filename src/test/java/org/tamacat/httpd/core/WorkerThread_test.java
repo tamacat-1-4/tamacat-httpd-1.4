@@ -1,6 +1,5 @@
 package org.tamacat.httpd.core;
 
-
 import java.net.ServerSocket;
 import java.util.Properties;
 
@@ -11,7 +10,6 @@ import org.apache.http.protocol.ResponseContent;
 import org.apache.http.protocol.ResponseDate;
 import org.apache.http.protocol.ResponseServer;
 import org.tamacat.httpd.config.ServerConfig;
-import org.tamacat.httpd.core.jmx.BasicCounter;
 import org.tamacat.httpd.handler.DefaultHttpService;
 import org.tamacat.util.IOUtils;
 import org.tamacat.util.PropertyUtils;
@@ -45,12 +43,10 @@ public class WorkerThread_test {
 		//   	new DefaultHttpResponseFactory(), null, null,
 		//    	paramsBuilder.buildParams());
 
-		BasicCounter counter = new BasicCounter();
 		ServerSocket serversocket = new ServerSocket(8080);
 		thread = new DefaultWorker();
 		thread.setHttpService(service);
 		thread.setServerConfig(serverConfig);
-		thread.setPerformanceCounter(counter);
 		thread.setSocket(serversocket.accept());
 		new Thread(thread).start();
 		thread.isClosed();

@@ -20,7 +20,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpService;
 import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.core.Worker;
-import org.tamacat.httpd.core.jmx.PerformanceCounter;
+import org.tamacat.httpd.core.jmx.BasicCounter;
 import org.tamacat.io.RuntimeIOException;
 import org.tamacat.log.DiagnosticContext;
 import org.tamacat.log.Log;
@@ -37,11 +37,15 @@ public class DefaultWorker implements Worker {
 	static final String HTTP_IN_CONN = "http.in-conn";
 	static final String HTTP_OUT_CONN = "http.out-conn";
 	static final String HTTP_CONN_KEEPALIVE = "http.proxy.conn-keepalive";
-
+	static final BasicCounter COUNTER = new BasicCounter();
+	
+	static {
+		COUNTER.register();
+	}
+	
 	protected ServerConfig serverConfig;
 	protected HttpService httpService;
 	protected Socket socket;
-	protected PerformanceCounter counter;
 	protected ServerHttpConnection conn;
 	protected HttpRequestFactory httpRequestFactory;
 	protected boolean workerThreadClientConnectionClose;
@@ -80,20 +84,14 @@ public class DefaultWorker implements Worker {
 	}
 
 	@Override
-	public void setPerformanceCounter(PerformanceCounter counter) {
-		this.counter = counter;
-	}
-
-	@Override
 	public void run() {
 		HttpContext parent = new BasicHttpContext(); //for client connection keep-alive.
 		try {
 			this.conn.bind(socket);
+			countUp();
 			LOG.debug("bind - " + conn);
-			
 			HttpConnectionMetrics metrics = this.conn.getMetrics();
 			while (Thread.interrupted()==false) {
-				countUp();
 				HttpContext context = new BasicHttpContext();
 				if (!conn.isOpen()) {
 					//shutdown client connection.
@@ -125,12 +123,12 @@ public class DefaultWorker implements Worker {
 					shutdownClient(clientConn);
 				}
 				DC.remove(); //delete Logging context.
-				countDown();
 			}
 		} catch (Exception e) {
 			handleException(e);
 		} finally {
 			shutdown(conn);
+			countDown();
 		}
 	}
 	
@@ -203,12 +201,14 @@ public class DefaultWorker implements Worker {
 			DC.remove();
 		}
 	}
-
+	
 	protected void countUp() {
-		if (counter != null) counter.countUp();
+		int active = COUNTER.countUp();
+		LOG.trace("active: "+active);
 	}
 
 	protected void countDown() {
-		if (counter != null) counter.countDown();
+		int active = COUNTER.countDown();
+		LOG.trace("active: "+active);
 	}
 }

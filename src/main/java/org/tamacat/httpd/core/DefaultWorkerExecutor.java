@@ -32,7 +32,7 @@ public class DefaultWorkerExecutor implements WorkerExecutor {
 	protected ExecutorService executorService;
 	protected DefaultThreadFactory threadFactory = new DefaultThreadFactory();
 	protected HttpRequestFactory httpRequestFactory;
-
+	
 	public DefaultWorkerExecutor() {
 		this(new StandardHttpRequestFactory());
 	}
