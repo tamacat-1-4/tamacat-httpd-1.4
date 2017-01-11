@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
 import javax.net.ssl.SSLException;
 
@@ -50,6 +53,7 @@ public class DefaultWorker implements Worker {
 	protected HttpRequestFactory httpRequestFactory;
 	protected boolean workerThreadClientConnectionClose;
 	
+
 	public DefaultWorker() {
 		httpRequestFactory = new StandardHttpRequestFactory();
 	}
@@ -94,13 +98,13 @@ public class DefaultWorker implements Worker {
 			while (Thread.interrupted()==false) {
 				HttpContext context = new BasicHttpContext();
 				if (!conn.isOpen()) {
-					//shutdown client connection.
-					shutdownClient(getClientHttpConnection(parent));
+					//Shutdown KeepAlive Backend HttpConnections. (Connection Closed)
+					shutdownClients(getClientHttpConnections(parent));
 					break;
 				} else {
 					//Bind server connection objects to the execution context
 					context.setAttribute(HTTP_IN_CONN, conn);
-					//reuse and remove client connection (using reverse proxy keep-alive)
+					//reuse and remove client connections (using reverse proxy keep-alive)
 					context.setAttribute(HTTP_OUT_CONN, parent.removeAttribute(HTTP_OUT_CONN));
 				}
 				if (LOG.isDebugEnabled()){
@@ -108,19 +112,23 @@ public class DefaultWorker implements Worker {
 				}
 				this.httpService.handleRequest(conn, context);
 				
-				ClientHttpConnection clientConn = getClientHttpConnection(context); //set from handleRequest (reverse proxy)
-				boolean reuseClientConn = isClientConnectionKeepAlive(clientConn, context);
-				if (reuseClientConn) {
-					parent.setAttribute(HTTP_OUT_CONN, clientConn);
-					if (LOG.isDebugEnabled()){
-						HttpConnectionMetrics clientConnMetrics = clientConn.getMetrics();
-						if (clientConnMetrics != null) {
-							LOG.debug("client conn count:" + clientConnMetrics.getRequestCount() + " - " + conn);
+				//Reuse ClientHttpConnections for ReverseProxy Backend KeepAlive
+				Collection<ClientHttpConnection> clientConns = getClientHttpConnections(context); //set from handleRequest (reverse proxy)
+				if (clientConns.size() > 0) {
+					if (isEnabledClientConnectionKeepAlive()) {
+						parent.setAttribute(HTTP_OUT_CONN, context.getAttribute(HTTP_OUT_CONN));
+						if (LOG.isDebugEnabled()){
+							for (ClientHttpConnection clientConn : clientConns) { 
+								HttpConnectionMetrics clientConnMetrics = clientConn.getMetrics();
+								if (clientConnMetrics != null) {
+									LOG.debug("client conn count:" + clientConnMetrics.getRequestCount() + " - " + conn);
+								}
+							}
 						}
+					} else {
+						//Shutdown Backend HttpConnections. (Disabled KeepAlive)
+						shutdownClients(clientConns);
 					}
-				} else {
-					//close client connection. (keep-alive off)
-					shutdownClient(clientConn);
 				}
 				DC.remove(); //delete Logging context.
 			}
@@ -132,16 +140,25 @@ public class DefaultWorker implements Worker {
 		}
 	}
 	
-	protected ClientHttpConnection getClientHttpConnection(HttpContext context) {
+	@SuppressWarnings("unchecked")
+	protected Collection<ClientHttpConnection> getClientHttpConnections(HttpContext context) {
 		Object value = context.getAttribute(HTTP_OUT_CONN);
-		if (conn != null && value != null && value instanceof ClientHttpConnection) {
-			return (ClientHttpConnection) value;
+		if (conn != null && value != null && value instanceof Map<?,?>) {
+			return ((Map<String, ClientHttpConnection>)value).values();
 		}
-		return null;
+		return new ArrayList<>();
+	}
+	
+	protected boolean isEnabledClientConnectionKeepAlive() {
+		if (workerThreadClientConnectionClose || conn == null || !conn.isOpen()) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 	protected boolean isClientConnectionKeepAlive(ClientHttpConnection clientConnn, HttpContext context) {
-		if (workerThreadClientConnectionClose || conn == null || clientConnn == null || !conn.isOpen() || !clientConnn.isOpen()) {
+		if (workerThreadClientConnectionClose || conn == null || !conn.isOpen() || clientConnn == null || !clientConnn.isOpen()) {
 			return false;
 		}
 		Object value = context.getAttribute(HTTP_CONN_KEEPALIVE);
@@ -175,17 +192,23 @@ public class DefaultWorker implements Worker {
 		return socket.isClosed();
 	}
 
-	protected void shutdownClient(HttpConnection clientConn) {
-		if (clientConn != null) {
-			String connString = clientConn.toString();
-			try {
-				clientConn.close();
-				LOG.debug("client conn closed. - " + connString);
-				
-				clientConn.shutdown();
-				LOG.debug("client conn shutdown. - " + connString);
-			} catch (IOException ignore) {
+	protected void shutdownClients(Collection<ClientHttpConnection> clientConns) {
+		if (clientConns != null) {
+			for (ClientHttpConnection clientConn : clientConns) {
+				shutdownClient(clientConn);
 			}
+		}
+	}
+	
+	protected void shutdownClient(ClientHttpConnection clientConn) {
+		String connString = clientConn.toString();
+		try {
+			clientConn.close();
+			LOG.debug("client conn closed. - " + connString);
+			
+			clientConn.shutdown();
+			LOG.debug("client conn shutdown. - " + connString);
+		} catch (IOException ignore) {
 		}
 	}
 

@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Map;
 
 import javax.net.SocketFactory;
 
@@ -43,6 +44,7 @@ import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
+import org.tamacat.util.CollectionUtils;
 
 /**
  * The {@link HttpHandler} for reverse proxy.
@@ -110,6 +112,43 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		response.setEntity(targetResponse.getEntity());
 	}
 
+	
+	protected ClientHttpConnection getClientHttpConnection(HttpContext context, ReverseUrl reverseUrl) throws IOException {
+		ClientHttpConnection conn = null;
+		@SuppressWarnings("unchecked")
+		Map<String, ClientHttpConnection> conns = (Map<String,ClientHttpConnection>) context.getAttribute(HTTP_OUT_CONN);
+		if (conns != null) {
+			String key = reverseUrl.getReverse().toString();
+			LOG.debug("get reuse client conn. reverse key="+key+" conn="+conn);
+			conn = conns.get(key);
+		}
+		//ClientHttpConnection conn = (ClientHttpConnection) context.getAttribute(HTTP_OUT_CONN);
+		
+		if (conn == null || !conn.isOpen()) {
+			conn = new ClientHttpConnection(serviceUrl.getServerConfig());
+			Socket outsocket = createSocket(reverseUrl);
+			if (outsocket == null) throw new SocketException("Can not create socket.");
+			conn.bind(outsocket);
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
+				//LOG.trace("request: " + request);
+			}
+		}
+		return conn;
+	}
+	
+	protected void setReuseClientHttpConnection(HttpContext context, ClientHttpConnection conn) {
+		@SuppressWarnings("unchecked")
+		Map<String, ClientHttpConnection> conns = (Map<String, ClientHttpConnection>) context.getAttribute(HTTP_OUT_CONN);
+		if (conns == null) {
+			conns = CollectionUtils.newLinkedHashMap();
+		}
+		String key = getReverseUrl(context).getReverse().toString();
+		LOG.debug("set reuse client conn. reverse key="+key+" conn="+conn);
+		conns.put(key, conn);
+		context.setAttribute(HTTP_OUT_CONN, conns);
+	}
+	
 	/**
 	 * Request forwarding to backend server.
 	 */
@@ -123,18 +162,15 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		}
 		try {
 			context.setAttribute("reverseUrl", reverseUrl);
-			Socket outsocket = createSocket(reverseUrl);
-			if (outsocket == null) throw new SocketException("Can not create socket.");
-			ClientHttpConnection conn = (ClientHttpConnection) context.getAttribute(HTTP_OUT_CONN);
-			if (conn == null || !conn.isOpen()) {
-				conn = new ClientHttpConnection(serviceUrl.getServerConfig());
-				conn.bind(outsocket);
-			}
-
-			if (LOG.isTraceEnabled()) {
-				LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
-				LOG.trace("request: " + request);
-			}
+//			Socket outsocket = createSocket(reverseUrl);
+//			if (outsocket == null) throw new SocketException("Can not create socket.");
+//			ClientHttpConnection conn = (ClientHttpConnection) context.getAttribute(HTTP_OUT_CONN);
+//			if (conn == null || !conn.isOpen()) {
+//				conn = new ClientHttpConnection(serviceUrl.getServerConfig());
+//				conn.bind(outsocket);
+//			}
+			ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
+			
 			HttpContext reverseContext = new BasicHttpContext();
 			reverseContext.setAttribute("reverseUrl", reverseUrl);
 			
@@ -154,8 +190,9 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 				//Keep-Alive client connection.
 				boolean keepAlive = connStrategy.keepAlive(targetResponse, reverseContext);
 				if (keepAlive) {
-					context.setAttribute(HTTP_CONN_KEEPALIVE, true);
-					context.setAttribute(HTTP_OUT_CONN, conn); //WokerThread close the client connection.
+					setReuseClientHttpConnection(context, conn);
+					//context.setAttribute(HTTP_CONN_KEEPALIVE, true); //unused.
+					//context.setAttribute(HTTP_OUT_CONN, conn); //WokerThread close the client connection.
 				}
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("client conn keep-alive count:" + conn.getMetrics().getResponseCount() + " - " + conn);
