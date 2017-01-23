@@ -133,7 +133,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 				LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
 			}
 		} else {
-			long time = conn.getLastAccessTime();;
+			long time = conn.getLastAccessTime();
 			LOG.debug("get reuse client conn. url="+key+", conn="+conn +", access="+DateUtils.getTime(new Date(time), "yyyyMMddHHmmss"));
 		}
 		return conn;
@@ -164,11 +164,8 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		}
 		try {
 			context.setAttribute("reverseUrl", reverseUrl);
-			ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
-			
 			HttpContext reverseContext = new BasicHttpContext();
 			reverseContext.setAttribute("reverseUrl", reverseUrl);
-			
 			ReverseHttpRequest targetRequest = ReverseHttpRequestFactory
 					.getInstance(request, response, reverseContext, reverseUrl);
 			
@@ -180,6 +177,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 				countUp(reverseUrl, context);
 				
 				httpexecutor.preProcess(targetRequest, httpproc, reverseContext);
+				ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
 				HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
 				httpexecutor.postProcess(targetResponse, httpproc, reverseContext);
 				//Keep-Alive client connection.
