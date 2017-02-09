@@ -34,11 +34,11 @@ import org.tamacat.util.PropertyUtils;
 public class ReverseProxyHandlerTest {
 
 	ServerConfig serverConfig;
-	ReverseProxyHandler handler;
+	BackendKeepAliveReverseProxyHandler handler;
 
 	@Before
 	public void setUp() throws Exception {
-		handler = new ReverseProxyHandler();
+		handler = new BackendKeepAliveReverseProxyHandler();
 		serverConfig = new ServerConfig(PropertyUtils.getProperties("server.properties"));
 		ServiceUrl serviceUrl = new ServiceUrl(serverConfig);
 

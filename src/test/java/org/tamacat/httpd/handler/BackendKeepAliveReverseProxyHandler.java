@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
+import java.util.Map;
 
 import javax.net.SocketFactory;
 
@@ -43,13 +45,18 @@ import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ReverseUtils;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
+import org.tamacat.util.CollectionUtils;
+import org.tamacat.util.DateUtils;
 
 /**
  * The {@link HttpHandler} for reverse proxy.
  */
-public class ReverseProxyHandler extends AbstractHttpHandler {
+public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 
 	static final Log LOG = LogFactory.getLog(ReverseProxyHandler.class);
+
+	protected static final String HTTP_OUT_CONN = "http.out-conn";
+	protected static final String HTTP_CONN_KEEPALIVE = "http.proxy.conn-keepalive";
 
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
 
@@ -66,7 +73,7 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected boolean useForwardHeader;
 	protected String forwardHeader = "X-Forwarded-For";
 
-	public ReverseProxyHandler() {
+	public BackendKeepAliveReverseProxyHandler() {
 		this.httpexecutor = new HttpRequestExecutor();
 		setParseRequestParameters(false);
 		setDefaultHttpRequestInterceptor();
@@ -109,14 +116,39 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 
 	
 	protected ClientHttpConnection getClientHttpConnection(HttpContext context, ReverseUrl reverseUrl) throws IOException {
-		ClientHttpConnection conn = new ClientHttpConnection(serviceUrl.getServerConfig());
-		Socket outsocket = createSocket(reverseUrl);
-		if (outsocket == null) throw new SocketException("Can not create socket.");
-		conn.bind(outsocket);
-		if (LOG.isTraceEnabled()) {
-			LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
+		ClientHttpConnection conn = null;
+		String key = reverseUrl.getReverse().toString();
+		//Reuse client connention (KeepAlive)
+		@SuppressWarnings("unchecked")
+		Map<String, ClientHttpConnection> conns = (Map<String,ClientHttpConnection>) context.getAttribute(HTTP_OUT_CONN);
+		if (conns != null) {
+			conn = conns.get(key);
+		}
+		if (conn == null || !conn.isOpen()) {
+			conn = new ClientHttpConnection(serviceUrl.getServerConfig());
+			Socket outsocket = createSocket(reverseUrl);
+			if (outsocket == null) throw new SocketException("Can not create socket.");
+			conn.bind(outsocket);
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("Outgoing connection to "	+ outsocket.getInetAddress());
+			}
+		} else {
+			long time = conn.getLastAccessTime();
+			LOG.debug("get reuse client conn. url="+key+", conn="+conn +", access="+DateUtils.getTime(new Date(time), "yyyyMMddHHmmss"));
 		}
 		return conn;
+	}
+	
+	protected void setReuseClientHttpConnection(HttpContext context, ClientHttpConnection conn) {
+		@SuppressWarnings("unchecked")
+		Map<String, ClientHttpConnection> conns = (Map<String, ClientHttpConnection>) context.getAttribute(HTTP_OUT_CONN);
+		if (conns == null) {
+			conns = CollectionUtils.newLinkedHashMap();
+		}
+		String key = getReverseUrl(context).getReverse().toString();
+		LOG.debug("set reuse client conn. url="+key+", conn="+conn);
+		conns.put(key, conn);
+		context.setAttribute(HTTP_OUT_CONN, conns);
 	}
 	
 	/**
@@ -148,6 +180,14 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 				ClientHttpConnection conn = getClientHttpConnection(context, reverseUrl);
 				HttpResponse targetResponse = httpexecutor.execute(targetRequest, conn, reverseContext);
 				httpexecutor.postProcess(targetResponse, httpproc, reverseContext);
+				//Keep-Alive client connection.
+				boolean keepAlive = connStrategy.keepAlive(targetResponse, reverseContext);
+				if (keepAlive) {
+					setReuseClientHttpConnection(context, conn);
+				}
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("client conn keep-alive count:" + conn.getMetrics().getResponseCount() + " - " + conn);
+				}
 				return targetResponse;
 			} finally {
 				countDown(reverseUrl, context);
