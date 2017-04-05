@@ -134,7 +134,12 @@ public class LocalFileHttpHandler extends AbstractHttpHandler {
 
 	@Override
 	protected HttpEntity getFileEntity(File file) {
-		FileEntity body = new FileEntity(file, ContentType.create(getContentType(file)));
+		ContentType contentType = ContentType.DEFAULT_TEXT;
+		try {
+			contentType = ContentType.create(getContentType(file));
+		} catch (Exception e) {
+		}
+		FileEntity body = new FileEntity(file, contentType);
 		return body;
 	}
 }

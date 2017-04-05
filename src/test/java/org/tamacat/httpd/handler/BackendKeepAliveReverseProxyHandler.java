@@ -254,9 +254,12 @@ public class BackendKeepAliveReverseProxyHandler extends AbstractHttpHandler {
 
 	@Override
 	protected HttpEntity getFileEntity(File file) {
-		FileEntity body = new FileEntity(file,
-				ContentType.create(getContentType(file)));
-		return body;
+		ContentType type = ContentType.DEFAULT_TEXT;
+		try {
+			type = ContentType.create(getContentType(file));
+		} catch (Exception e) {
+		}
+		return new FileEntity(file, type);
 	}
 
 	/**

@@ -229,13 +229,21 @@ public class VelocityHttpHandler extends AbstractHttpHandler {
 	}
 
 	protected HttpEntity getFileEntity(File file, String contentType) {
-		FileEntity body = new FileEntity(file, ContentType.create(contentType, encoding));
-		return body;
+		ContentType type = ContentType.DEFAULT_TEXT;
+		try {
+			type = ContentType.create(contentType, encoding);
+		} catch (Exception e) {
+		}
+		return new FileEntity(file, type);
 	}
 
 	@Override
 	protected HttpEntity getFileEntity(File file) {
-		FileEntity body = new FileEntity(file, ContentType.create(getContentType(file)));
-		return body;
+		ContentType type = ContentType.DEFAULT_TEXT;
+		try {
+			type = ContentType.create(getContentType(file));
+		} catch (Exception e) {
+		}
+		return new FileEntity(file, type);
 	}
 }
