@@ -107,6 +107,16 @@ public class ServerConfig {
 	}
 	
 	/**
+	 * <p>Retuens the SSL/TLS cipher suites.
+	 * (Comma separate values to String[])
+	 * ex) https.support-cipherSuites=TLS_DHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_DHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	 * @since 1.4
+	 */
+	public String[] getSupportCipherSuites() {
+		return StringUtils.split(getParam("https.support-cipherSuites"), ",");
+	}
+	
+	/**
 	 * <p>Returns the value of parameter
 	 * @param name parameter name.
 	 * @return parameter value.

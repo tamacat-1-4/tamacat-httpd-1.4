@@ -24,7 +24,7 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 	protected String keyStoreFile;
 	protected char[] keyPassword;
 	protected KeyStoreType type = KeyStoreType.JKS;
-	protected SSLProtocol protocol = SSLProtocol.TLS;
+	protected SSLProtocol protocol = SSLProtocol.TLSv1_2;
 
 	public void setKeyStoreFile(String keyStoreFile) {
 		this.keyStoreFile = keyStoreFile;
@@ -57,7 +57,7 @@ public class DefaultSSLContextCreator implements SSLContextCreator {
 		setKeyStoreFile(serverConfig.getParam("https.keyStoreFile", ""));
 		setKeyPassword(serverConfig.getParam("https.keyPassword", ""));
 		setKeyStoreType(serverConfig.getParam("https.keyStoreType", "JKS"));
-		setSSLProtocol(serverConfig.getParam("https.protocol", "TLS"));
+		setSSLProtocol(serverConfig.getParam("https.protocol", "TLSv1_2"));
 	}
 
 	public void setKeyStoreType(String type) {

@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import javax.management.MXBean;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLServerSocket;
 
 import org.apache.http.HttpRequestInterceptor;
@@ -33,6 +35,7 @@ import org.tamacat.httpd.handler.HostRequestHandlerMapper;
 import org.tamacat.io.RuntimeIOException;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
+import org.tamacat.util.CollectionUtils;
 import org.tamacat.util.PropertyUtils;
 
 /**
@@ -229,6 +232,7 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 		SSLContext ctx = sslContextCreator.getSSLContext();
 		SSLServerSocket socket = (SSLServerSocket) ctx.getServerSocketFactory().createServerSocket(port);
 		setHttpsSupportProtocols(socket);
+		setHttpsSupportCipherSuites(socket);
 		return socket;
 	}
 
@@ -246,7 +250,34 @@ public class HttpEngine implements JMXReloadableHttpd, Runnable {
 			socket.setEnabledProtocols(httpsSupportProtocols);
 		}
 	}
-
+	
+	/**
+	 * <p>Set the Https Support CiperSuites
+	 * @param socket
+	 * @since 1.4
+	 */
+	protected void setHttpsSupportCipherSuites(SSLServerSocket socket) {
+		List<String> cipherSuitesList = CollectionUtils.newArrayList();
+		String[] cipherSuites = getServerConfig().getSupportCipherSuites();
+		if (cipherSuites.length == 0) {
+			//System.setProperty("jdk.tls.ephemeralDHKeySize", "2048");
+			
+			//Get the default cipher suites.
+			//Delete: !*_DES_*, !*_3DES_*, !*_RC4_*,!TLS_RSA_WITH_*
+			cipherSuites = socket.getSSLParameters().getCipherSuites();
+			for (String cipher : Arrays.asList(cipherSuites)) {
+				if (cipher.startsWith("TLS_RSA_WITH_")) continue; //Forward Secrecy
+				if (cipher.indexOf("_3DES_")>=0) continue; //CVE-2016-2183(Sweet32)
+				if (cipher.indexOf("_DES_")>=0) continue;
+				if (cipher.indexOf("_RC4_")>=0) continue;
+				cipherSuitesList.add(cipher);
+			}
+		}
+		SSLParameters params = new SSLParameters();
+		params.setCipherSuites(cipherSuitesList.toArray(new String[cipherSuitesList.size()]));
+		socket.setSSLParameters(params);
+	}
+	
 	public void reload() {
 		init();
 		LOG.info("reloaded.");
