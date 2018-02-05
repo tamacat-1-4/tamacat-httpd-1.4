@@ -115,24 +115,25 @@ public class VelocityListingsPage {
 				}
 			}
 		});
-
-		Arrays.sort(files, new FileSort());
-
 		ArrayList<Map<String, String>> list = new ArrayList<>();
-		for (File f : files) {
-			Map<String, String> map = new HashMap<>();
-			String name = StringUtils.isNotEmpty(encoding)? StringUtils.encode(f.getName(),"UTF-8") : f.getName();
-			if (f.isDirectory()) {
-				map.put("getName", name + "/");
-				map.put("length", "-");
-			} else {
-				map.put("getName", name);
-				map.put("length", String.format("%1$,3d KB", (long)Math.ceil(f.length()/1024d)).trim());
+		if (files != null) {
+			Arrays.sort(files, new FileSort());
+			for (File f : files) {
+				Map<String, String> map = new HashMap<>();
+				String name = StringUtils.isNotEmpty(encoding)? StringUtils.encode(f.getName(),"UTF-8") : f.getName();
+				if (f.isDirectory()) {
+					map.put("getName", name + "/");
+					map.put("length", "-");
+				} else {
+					map.put("getName", name);
+					map.put("length", String.format("%1$,3d KB", (long)Math.ceil(f.length()/1024d)).trim());
+				}
+				map.put("isDirectory", String.valueOf(f.isDirectory()));
+				map.put("lastModified", DateUtils.getTime(new Date(f.lastModified()), dateFormat, locale));
+				list.add(map);
 			}
-			map.put("isDirectory", String.valueOf(f.isDirectory()));
-			map.put("lastModified", DateUtils.getTime(new Date(f.lastModified()), dateFormat, locale));
-			list.add(map);
 		}
+		
 		context.put("list", list);
 		try {
 			Template template = getTemplate(listingsPage + ".vm");

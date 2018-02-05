@@ -100,14 +100,15 @@ public class FileSessionStore implements SessionStore {
 
 	@Override
 	public void release() {
-		String[] files = new File(directory).list(
-				getFileNameFilter(fileNameSuffix));
-		for (String f : files) {
-			try {
-				File file = new File(f);
-				file.deleteOnExit();
-			} catch (Exception e) {
-				LOG.warn(e.getMessage());
+		String[] files = new File(directory).list(getFileNameFilter(fileNameSuffix));
+		if (files != null) {
+			for (String f : files) {
+				try {
+					File file = new File(f);
+					file.deleteOnExit();
+				} catch (Exception e) {
+					LOG.warn(e.getMessage());
+				}
 			}
 		}
 	}
