@@ -20,4 +20,12 @@ public class UnauthorizedException extends HttpException {
 	public UnauthorizedException(String message) {
 		super(BasicHttpStatus.SC_UNAUTHORIZED, message);
 	}
+	
+	public UnauthorizedException(Throwable cause) {
+		super(BasicHttpStatus.SC_UNAUTHORIZED, cause);
+	}
+	
+	public UnauthorizedException(String message, Throwable cause) {
+		super(BasicHttpStatus.SC_UNAUTHORIZED, message, cause);
+	}
 }

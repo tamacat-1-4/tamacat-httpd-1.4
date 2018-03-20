@@ -24,4 +24,8 @@ public class ForbiddenException extends HttpException {
 	public ForbiddenException(Throwable cause) {
 		super(BasicHttpStatus.SC_FORBIDDEN, cause);
 	}
+	
+	public ForbiddenException(String message, Throwable cause) {
+		super(BasicHttpStatus.SC_FORBIDDEN, message, cause);
+	}
 }

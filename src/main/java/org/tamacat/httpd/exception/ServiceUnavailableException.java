@@ -25,8 +25,7 @@ public class ServiceUnavailableException extends HttpException {
 		super(BasicHttpStatus.SC_SERVICE_UNAVAILABLE, message);
 	}
 
-	public ServiceUnavailableException(String message,
-			Throwable cause) {
+	public ServiceUnavailableException(String message, Throwable cause) {
 		super(BasicHttpStatus.SC_SERVICE_UNAVAILABLE, message, cause);
 	}
 }
