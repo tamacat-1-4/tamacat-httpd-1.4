@@ -273,10 +273,18 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		}
 	}
 	
+	/**
+	 * Get a remote IP address using X-Forwarded-For request header.
+	 * @param forwardHeader
+	 */
 	public void setUseForwardHeader(boolean forwardHeader) {
 		this.useForwardHeader = forwardHeader;
 	}
 
+	/**
+	 * Set a request header name for Forwarded IP address.
+	 * @param forwardHeader
+	 */
 	public void setForwardHeader(String forwardHeader) {
 		this.forwardHeader = forwardHeader;
 	}

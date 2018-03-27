@@ -21,6 +21,9 @@ public class AccessLogFilter implements RequestFilter, ResponseFilter {
 	
 	protected boolean faviconLogging;
 	
+	protected boolean useForwardHeader;
+	protected String forwardHeader = "X-Forwarded-For";
+	
 	/**
 	 * Logging "/favicon.ico" to access log.
 	 * default false (not logging)
@@ -51,7 +54,25 @@ public class AccessLogFilter implements RequestFilter, ResponseFilter {
 		if (start != null) {
 			long time = System.currentTimeMillis() - start;
 			context.setAttribute(RESPONSE_TIME, time);
-			AccessLogUtils.writeAccessLog(request, response, context, time);
+			AccessLogUtils.writeAccessLog(request, response, context, time, useForwardHeader ? forwardHeader: null);
 		}
+	}
+	
+	/**
+	 * Get a remote IP address using X-Forwarded-For request header.
+	 * @since 1.4
+	 * @param forwardHeader
+	 */
+	public void setUseForwardHeader(boolean forwardHeader) {
+		this.useForwardHeader = forwardHeader;
+	}
+
+	/**
+	 * Set a request header name for Forwarded IP address.
+	 * @since 1.4
+	 * @param forwardHeader
+	 */
+	public void setForwardHeader(String forwardHeader) {
+		this.forwardHeader = forwardHeader;
 	}
 }
