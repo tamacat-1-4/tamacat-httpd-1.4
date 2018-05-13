@@ -6,6 +6,10 @@ package org.tamacat.httpd.config;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -216,9 +220,40 @@ public class ServiceConfigParser {
 	
 	protected URL getURL(String url) {
 		try {
-			return new URL(url);
+			return new URL(replaceEnvironmentVariable(url));
 		} catch (MalformedURLException e) {
 			return null;
 		}
+	}
+	
+	
+	static final Pattern REPLACE_HOLDER_PATTERN = Pattern.compile("\\$\\{[a-zA-Z0-9_\\-]*\\}"); //${ENV_VARIABLE}
+			
+	/**
+	 * Replace a environment variable from setter injection value.
+	 * ex. http://${LOCAL_SERVER}:${LOCAL_PORT}/examples/ -> http://localhost:8080/examples/
+	 * @param value
+	 * @since 1.4-20180513
+	 */
+	static String replaceEnvironmentVariable(String value) {
+		if (StringUtils.isNotEmpty(value) && value.indexOf("${")>=0 && value.indexOf("}")>0) {
+			Matcher m = REPLACE_HOLDER_PATTERN.matcher(value);
+			Set<String> targets = new LinkedHashSet<>();
+			while (m.find()) {
+				targets.add(m.group(0));
+			}
+			String replacedValue = value;
+			for (String name : targets) {
+				if (name.startsWith("${") && name.endsWith("}")) {
+					String key = name.substring(2, name.length()-1);
+					String env = System.getenv(key);
+					if (env != null) {
+						replacedValue = replacedValue.replace(name, env);
+					}
+				}
+			}
+			return replacedValue;
+		}
+		return value;
 	}
 }
