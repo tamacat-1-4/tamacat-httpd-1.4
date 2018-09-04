@@ -72,6 +72,11 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	
 	protected Set<String> allowMethods = new LinkedHashSet<>();
 	protected String allowMethodValue;
+	
+	protected String accessControlAllowOrigin;  //"*"
+	protected String accessControlAllowMethods; //"GET,POST,PUT,DELETE,OPTIONS"
+	protected String accessControlAllowHeaders; //"Content-Type, Authorization, X-Requested-With"
+	
 	protected boolean parseRequestParameters = true;
 	
 	protected AbstractHttpHandler() {
@@ -128,8 +133,20 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 		if (isAllowedMethod(request) == false) {
 			throw new HttpException(BasicHttpStatus.SC_METHOD_NOT_ALLOWED);
 		}
+		//OPTIONS request
 		if (allowMethodValue != null && "OPTIONS".equals(request.getRequestLine().getMethod())) {
 			response.setHeader("Allow", allowMethodValue);
+			
+			//Add Access-Control response headers. (CORS)
+			if (StringUtils.isNotEmpty(accessControlAllowOrigin)) {
+				response.setHeader("Access-Control-Allow-Origin", accessControlAllowOrigin);
+			}
+			if (StringUtils.isNotEmpty(accessControlAllowOrigin)) {
+				response.setHeader("Access-Control-Allow-Methods", accessControlAllowMethods);
+			}
+			if (StringUtils.isNotEmpty(accessControlAllowOrigin)) {
+				response.setHeader("Access-Control-Allow-Headers", accessControlAllowHeaders);
+			}
 			return;
 		}
 		if (parseRequestParameters) {
@@ -337,8 +354,41 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 		}
 	}
 	
+	/**
+	 * <p>Check the request method is allowed.
+	 * @param request
+	 * @since 1.2
+	 */
 	public boolean isAllowedMethod(HttpRequest request) {
 		//allowMethodValue is null -> allow all methods (don't check this class)
 		return allowMethodValue == null || allowMethods.contains(request.getRequestLine().getMethod());
+	}
+	
+	/**
+	 * <p>Set Access-Control-Allow-Origin response header. (CORS)
+	 * @sinze 1.4-20180904
+	 */
+	public void setAccessControlAllowOrigin(String accessControlAllowOrigin) {
+		this.accessControlAllowOrigin = accessControlAllowOrigin;	
+	}
+	
+	/**
+	 * <p>Set Access-Control-Allow-Methods response header. (CORS)
+	 * Overrider allowMethods
+	 * @param accessControlAllowMethods
+	 * @sinze 1.4-20180904
+	 */
+	public void setAccessControlAllowMethods(String accessControlAllowMethods) {
+		this.accessControlAllowMethods = accessControlAllowMethods;
+		setAllowMethods(accessControlAllowMethods);
+	}
+	
+	/**
+	 * <p>Set Access-Control-Allow-Headers response header. (CORS)
+	 * @param accessControlAllowHeaders
+	 * @sinze 1.4-20180904
+	 */
+	public void setAccessControlAllowHeaders(String accessControlAllowHeaders) {
+		this.accessControlAllowHeaders = accessControlAllowHeaders;
 	}
 }

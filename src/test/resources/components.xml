@@ -175,6 +175,15 @@
 		<property name="httpFilter">
 			<ref bean="AccessLogFilter" />
 		</property>
+		<property name="accessControlAllowOrigin">
+			<value>*</value>
+		</property>
+		<property name="accessControlAllowMethods">
+			<value>GET,POST,PUT,DELETE,OPTIONS</value>
+		</property>
+		<property name="accessControlAllowHeaders">
+			<value>Content-Type, Authorization, X-Requested-With</value>
+		</property>
 		<property name="httpFilter">
 			<ref bean="PerformanceCounterFilter" />
 		</property>

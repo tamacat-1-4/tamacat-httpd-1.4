@@ -35,6 +35,15 @@ public class ServerUtils {
 		}
 	}
 
+	/**
+	 * Get ${server.home}
+	 * @param docsRoot
+	 * @since 1.4-20180904
+	 */
+	public static String getServerHome() {
+		return serverHome;
+	}
+
 	public static String getServerDocsRoot(String docsRoot) {
 		return docsRoot.replace("${server.home}", serverHome).replace("\\", "/");
 	}
