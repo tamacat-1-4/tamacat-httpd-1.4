@@ -1,0 +1,165 @@
+/*
+ * Copyright (c) 2018 tamacat.org
+ * All rights reserved.
+ */
+package org.tamacat.httpd.filter;
+
+import static org.junit.Assert.*;
+
+import org.apache.http.Header;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.tamacat.httpd.config.ServerConfig;
+import org.tamacat.httpd.config.ServiceUrl;
+import org.tamacat.httpd.mock.HttpObjectFactory;
+
+/**
+ * Test of Response Filter for Set-Cookie response header adding Secure/HttpOnly attributes.
+ */
+public class SetCookieConvertFilterTest {
+	
+	SetCookieConvertFilter filter;
+
+	@Before
+	public void setUp() throws Exception {
+		ServerConfig config = new ServerConfig();
+		ServiceUrl serviceUrl = new ServiceUrl(config);
+		filter = new SetCookieConvertFilter();
+		filter.init(serviceUrl);
+	}
+
+	@After
+	public void tearDown() throws Exception {
+	}
+	
+	/**
+	 * HttpOnly=true, Secure=false
+	 */
+	@Test
+	public void testAfterResponseAddHttpOnly() {
+		filter.setHttpOnly(true);
+		filter.setSecure(false);
+		filter.setCheckParentRequestHeader("X-Forwarded-For");
+		filter.setHttpSecureEnabled(false);
+		
+		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
+		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
+		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure");
+		resp.addHeader("Set-Cookie", "name4=value4; path=/test4; HttpOnly; Secure");
+		
+		resp.addHeader("Set-Cookie", "nameHttpOnly=valueHttpOnly; path=/HttpOnly");
+		
+		resp.setHeader("Test","OK");
+		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		
+		Header[] headers= resp.getHeaders("Set-Cookie");
+		assertEquals("name1=value1; path=/test1; HttpOnly", headers[0].getValue());
+		assertEquals("name2=value2; path=/test2; HttpOnly", headers[1].getValue());
+		assertEquals("name3=value3; path=/test3; Secure; HttpOnly", headers[2].getValue());
+		assertEquals("name4=value4; path=/test4; HttpOnly; Secure", headers[3].getValue());
+		assertEquals("nameHttpOnly=valueHttpOnly; path=/HttpOnly; HttpOnly", headers[4].getValue());	
+	}
+
+	/**
+	 * HttpOnly=false, Secure=true
+	 */
+	@Test
+	public void testAfterResponseAddSecure() {
+		filter.setHttpOnly(false);
+		filter.setSecure(true);
+		filter.setCheckParentRequestHeader("X-Forwarded-For");
+		filter.setHttpSecureEnabled(false);
+		
+		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
+		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
+		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure");
+		resp.addHeader("Set-Cookie", "name4=value4; path=/test4; HttpOnly; Secure");
+		
+		resp.addHeader("Set-Cookie", "nameSecure=valueSecure; path=/Secure");
+		
+		resp.setHeader("Test","OK");
+		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		
+		Header[] headers= resp.getHeaders("Set-Cookie");
+		assertEquals("name1=value1; path=/test1; Secure", headers[0].getValue());
+		assertEquals("name2=value2; path=/test2; HttpOnly; Secure", headers[1].getValue());
+		assertEquals("name3=value3; path=/test3; Secure", headers[2].getValue());
+		assertEquals("name4=value4; path=/test4; HttpOnly; Secure", headers[3].getValue());
+		assertEquals("nameSecure=valueSecure; path=/Secure; Secure", headers[4].getValue());
+	}
+	
+	/**
+	 * HttpOnly=true, Secure=true
+	 * httpSecureEnabled=true
+	 * X-Forwarded-For: 127.0.0.1
+	 */
+	@Test
+	public void testAfterResponseAddSecureOn() {
+		filter.setHttpOnly(true);
+		filter.setSecure(true);
+		filter.setCheckParentRequestHeader("X-Forwarded-For");
+		filter.setHttpSecureEnabled(true);
+		
+		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		req.setHeader("X-Forwarded-For", "127.0.0.1");
+		
+		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
+		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
+		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure");
+		resp.addHeader("Set-Cookie", "name4=value4; path=/test4; HttpOnly; Secure");
+		
+		resp.addHeader("Set-Cookie", "nameSecure=valueSecure; path=/Secure");
+		
+		resp.setHeader("Test","OK");
+		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		
+		Header[] headers= resp.getHeaders("Set-Cookie");
+		assertEquals("name1=value1; path=/test1; HttpOnly; Secure", headers[0].getValue());
+		assertEquals("name2=value2; path=/test2; HttpOnly; Secure", headers[1].getValue());
+		assertEquals("name3=value3; path=/test3; Secure; HttpOnly", headers[2].getValue());
+		assertEquals("name4=value4; path=/test4; HttpOnly; Secure", headers[3].getValue());
+		assertEquals("nameSecure=valueSecure; path=/Secure; HttpOnly; Secure", headers[4].getValue());
+	}
+	
+	/**
+	 * HttpOnly=true, Secure=true
+	 * httpSecureEnabled=true
+	 * Empty X-Forwarded-For header.
+	 */
+	@Test
+	public void testAfterResponseAddSecureOff_HTTP() {
+		filter.setHttpOnly(true);
+		filter.setSecure(true);
+		filter.setCheckParentRequestHeader("X-Forwarded-For");
+		filter.setHttpSecureEnabled(true);
+		
+		HttpRequest req = HttpObjectFactory.createHttpRequest("GET", "/");
+		//req.setHeader("X-Forwarded-For", "127.0.0.1"); //Internal HTTP Access.
+		
+		HttpResponse resp = HttpObjectFactory.createHttpResponse(200, "OK");
+		resp.addHeader("Set-Cookie", "name1=value1; path=/test1");
+		resp.addHeader("Set-Cookie", "name2=value2; path=/test2; HttpOnly;");
+		resp.addHeader("Set-Cookie", "name3=value3; path=/test3; Secure;");
+		resp.addHeader("Set-Cookie", "name4=value4; path=/test4; HttpOnly; Secure");
+		
+		resp.addHeader("Set-Cookie", "nameSecure=valueSecure; path=/Secure");
+		
+		resp.setHeader("Test","OK");
+		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		
+		Header[] headers= resp.getHeaders("Set-Cookie");
+		assertEquals("name1=value1; path=/test1", headers[0].getValue());
+		assertEquals("name2=value2; path=/test2; HttpOnly;", headers[1].getValue());
+		assertEquals("name3=value3; path=/test3; Secure;", headers[2].getValue());
+		assertEquals("name4=value4; path=/test4; HttpOnly; Secure", headers[3].getValue());
+		assertEquals("nameSecure=valueSecure; path=/Secure", headers[4].getValue());
+	}
+}
