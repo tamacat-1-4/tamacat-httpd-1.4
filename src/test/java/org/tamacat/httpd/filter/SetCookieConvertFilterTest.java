@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 import org.apache.http.Header;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.protocol.HttpContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +56,9 @@ public class SetCookieConvertFilterTest {
 		resp.addHeader("Set-Cookie", "nameHttpOnly=valueHttpOnly; path=/HttpOnly");
 		
 		resp.setHeader("Test","OK");
-		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		HttpContext context = HttpObjectFactory.createHttpContext();
+		filter.doFilter(req, resp, context);
+		filter.afterResponse(req, resp, context);
 		
 		Header[] headers= resp.getHeaders("Set-Cookie");
 		assertEquals("name1=value1; path=/test1; HttpOnly", headers[0].getValue());
@@ -85,7 +88,9 @@ public class SetCookieConvertFilterTest {
 		resp.addHeader("Set-Cookie", "nameSecure=valueSecure; path=/Secure");
 		
 		resp.setHeader("Test","OK");
-		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		HttpContext context = HttpObjectFactory.createHttpContext();
+		filter.doFilter(req, resp, context);
+		filter.afterResponse(req, resp, context);
 		
 		Header[] headers= resp.getHeaders("Set-Cookie");
 		assertEquals("name1=value1; path=/test1; Secure", headers[0].getValue());
@@ -119,7 +124,9 @@ public class SetCookieConvertFilterTest {
 		resp.addHeader("Set-Cookie", "nameSecure=valueSecure; path=/Secure");
 		
 		resp.setHeader("Test","OK");
-		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		HttpContext context = HttpObjectFactory.createHttpContext();
+		filter.doFilter(req, resp, context);
+		filter.afterResponse(req, resp, context);
 		
 		Header[] headers= resp.getHeaders("Set-Cookie");
 		assertEquals("name1=value1; path=/test1; HttpOnly; Secure", headers[0].getValue());
@@ -153,7 +160,9 @@ public class SetCookieConvertFilterTest {
 		resp.addHeader("Set-Cookie", "nameSecure=valueSecure; path=/Secure");
 		
 		resp.setHeader("Test","OK");
-		filter.afterResponse(req, resp, HttpObjectFactory.createHttpContext());
+		HttpContext context = HttpObjectFactory.createHttpContext();
+		filter.doFilter(req, resp, context);
+		filter.afterResponse(req, resp, context);
 		
 		Header[] headers= resp.getHeaders("Set-Cookie");
 		assertEquals("name1=value1; path=/test1", headers[0].getValue());

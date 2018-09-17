@@ -30,6 +30,8 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 
 	static final Log LOG = LogFactory.getLog(SetCookieConvertFilter.class);
 	
+	static final String CONTEXT_SET_COOKIE_CONVERT = "SetCookieConvertFilter.__SET_COOKIE_CONVERT__";
+	
 	protected ServiceUrl serviceUrl;
 
 	protected boolean httpSecureEnabled; //default false: always convert.
@@ -44,16 +46,24 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	}
 
 	@Override
-	public void doFilter(HttpRequest request, HttpResponse response, HttpContext context) {		
+	public void doFilter(HttpRequest req, HttpResponse resp, HttpContext context) {
+		//for Internal http access.
+		if (checkAddSecureEnabled(req) == false) {
+			context.setAttribute(CONTEXT_SET_COOKIE_CONVERT, "skip");
+		}
 	}
 	
 	@Override
 	public void afterResponse(HttpRequest req, HttpResponse resp, HttpContext context) {
+		//for Internal http access.
+		if ("skip".equals(context.getAttribute(CONTEXT_SET_COOKIE_CONVERT))) {
+			return;
+		}
 		if (isHttpOnly || isSecure) {
 			Header[] headers = resp.getHeaders("Set-Cookie");
 			for (Header header : headers) {
 				String value = header.getValue();
-				if (StringUtils.isNotEmpty(value) && checkAddSecureEnabled(req)) {
+				if (StringUtils.isNotEmpty(value)) {
 					String convertedValue = convertSetCookieValue(value);
 					LOG.trace("[Filter] "+value +" => "+convertedValue);
 					resp.removeHeader(header);
