@@ -65,16 +65,17 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	protected HttpProcessor httpproc;
 	protected boolean useForwardHeader;
 	protected String forwardHeader = "X-Forwarded-For";
+	protected boolean supportExpectContinue;
 
 	public ReverseProxyHandler() {
 		this.httpexecutor = new HttpRequestExecutor();
 		setParseRequestParameters(false);
-		setDefaultHttpRequestInterceptor();
 	}
 
 	@Override
 	public void setServiceUrl(ServiceUrl serviceUrl) {
 		super.setServiceUrl(serviceUrl);
+		setDefaultHttpRequestInterceptor();
 		connStrategy = new BackEndKeepAliveConnReuseStrategy(serviceUrl.getServerConfig());
 		httpproc = procBuilder.build();
 	}
@@ -171,8 +172,11 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		procBuilder.addInterceptor(new RequestContent())
 				.addInterceptor(new RequestTargetHost())
 				.addInterceptor(new RequestConnControl())
-				.addInterceptor(new RequestUserAgent())
-				.addInterceptor(new RequestExpectContinue(true));
+				.addInterceptor(new RequestUserAgent());
+		//Bug#14
+		if (supportExpectContinue) {
+			procBuilder.addInterceptor(new RequestExpectContinue(supportExpectContinue));
+		}
 	}
 
 	public void addHttpRequestInterceptor(HttpRequestInterceptor interceptor) {
@@ -287,5 +291,15 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 	 */
 	public void setForwardHeader(String forwardHeader) {
 		this.forwardHeader = forwardHeader;
+	}
+	
+	/**
+	 * true: ReverseProxy add Expect: 100-continue request header to back-end.
+	 * default: false, For back-end server that can not understand Expect header.
+	 * @since 1.3.2/1.4-20181214
+	 * @param supportExpectContinue
+	 */
+	public void setSupportExpectContinue(boolean supportExpectContinue) {
+		this.supportExpectContinue = supportExpectContinue;
 	}
 }
