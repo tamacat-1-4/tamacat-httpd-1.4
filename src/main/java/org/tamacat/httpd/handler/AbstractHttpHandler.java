@@ -141,10 +141,10 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 			if (StringUtils.isNotEmpty(accessControlAllowOrigin)) {
 				response.setHeader("Access-Control-Allow-Origin", accessControlAllowOrigin);
 			}
-			if (StringUtils.isNotEmpty(accessControlAllowOrigin)) {
+			if (StringUtils.isNotEmpty(accessControlAllowMethods)) {
 				response.setHeader("Access-Control-Allow-Methods", accessControlAllowMethods);
 			}
-			if (StringUtils.isNotEmpty(accessControlAllowOrigin)) {
+			if (StringUtils.isNotEmpty(accessControlAllowHeaders)) {
 				response.setHeader("Access-Control-Allow-Headers", accessControlAllowHeaders);
 			}
 			return;
