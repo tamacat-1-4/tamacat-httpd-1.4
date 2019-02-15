@@ -332,11 +332,24 @@ public class RequestUtils {
 		}
 	}
 
-	public static String getRequestHostURL(
-			HttpRequest request, HttpContext context) {
-		URL host = getRequestURL(request, context);
-		return host != null ? host.getProtocol()
-				+ "://" + host.getAuthority() : null;
+	/**
+	 * Get hostname from Host request header.
+	 * @param request
+	 * @param context
+	 */
+	public static String getRequestHost(HttpRequest request, HttpContext context) {
+		Header hostHeader = request.getFirstHeader(HTTP.TARGET_HOST);
+		if (hostHeader != null) {
+			String hostName = hostHeader.getValue();
+			if (hostName != null && hostName.indexOf(':') >= 0) {
+				String[] hostAndPort = hostName.split(":");
+				if (hostAndPort.length >= 2) {
+					hostName = hostAndPort[0];
+				}
+			}
+			return hostName;
+		}
+		return null;
 	}
 
 	public static String getRequestHostURL(

@@ -74,7 +74,7 @@ public class HostRequestHandlerMapper {
 		if (host.equals(DEFAULT_HOST) == false) {
 			LOG.info("add virtual host: " + host + "=" + mapper.getClass().getName());
 		}
-		hostHandler.put(host, mapper);
+		hostHandler.put(host.replaceAll("http://", "").replaceAll("https://", ""), mapper);
 	}
 
 	/**
@@ -86,7 +86,7 @@ public class HostRequestHandlerMapper {
 	public HttpRequestHandler lookup(HttpRequest request, HttpContext context) {
 		HttpRequestHandlerMapper mapper = null;
 		if (useVirtualHost) {
-			String host = RequestUtils.getRequestHostURL(request, context);
+			String host = RequestUtils.getRequestHost(request, context);
 			if (host == null) {
 				host = DEFAULT_HOST;
 			}

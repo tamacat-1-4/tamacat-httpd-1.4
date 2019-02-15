@@ -157,23 +157,23 @@ public class RequestUtilsTest {
 	}
 
 	@Test
-	public void testGetRequestHostURLHttpRequestHttpContext() {
+	public void testGetRequestHostHttpRequestHttpContext() {
 		HttpRequest request = new BasicHttpRequest("GET", "/test.html");
 
-		String url = RequestUtils.getRequestHostURL(request, context);
+		String url = RequestUtils.getRequestHost(request, context);
 		assertNull(url);
 
 		request.setHeader(HTTP.TARGET_HOST, "example.com");
-		url = RequestUtils.getRequestHostURL(request, context);
-		assertEquals("http://example.com", url);
+		url = RequestUtils.getRequestHost(request, context);
+		assertEquals("example.com", url);
 
 		request.setHeader(HTTP.TARGET_HOST, "example.com:8080");
-		url = RequestUtils.getRequestHostURL(request, context);
-		assertEquals("http://example.com:8080", url);
+		url = RequestUtils.getRequestHost(request, context);
+		assertEquals("example.com", url);
 
 		request.setHeader(HTTP.TARGET_HOST, "example.com:80");
-		url = RequestUtils.getRequestHostURL(request, context);
-		assertEquals("http://example.com", url);
+		url = RequestUtils.getRequestHost(request, context);
+		assertEquals("example.com", url);
 	}
 
 	@Test

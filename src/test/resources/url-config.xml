@@ -3,9 +3,9 @@
 	<!-- default -->
 	<service>
 		<url path="/" type="normal" handler="VelocityHandler" />
-		<url path="/test/" type="normal" handler="DefaultHandler" />
+		<url path="/test2/" type="normal" handler="DefaultHandler" />
 
-		<url path="/examples/" type="reverse" handler="NoAuthReverseHandler2">
+		<url path="/test/examples/" type="reverse" handler="NoAuthReverseHandler2">
 			<reverse>http://localhost:8080/examples/</reverse>
 		</url>
 
@@ -37,7 +37,7 @@
 	</service>
 
 	<!-- Virtual host -->
-	<service host="http://dev.tamacat.org">
+	<service host="dev.tamacat.org">
 		<url path="/" type="normal" handler="DefaultHandler2" />
 		<url path="/test/" type="reverse" handler="ReverseHandler">
 			<reverse>http://localhost:8080/test/</reverse>

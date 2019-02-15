@@ -192,7 +192,7 @@
 		</property>
 	</bean>
 	
-	<bean id="NoAuthReverseHandler2" class="org.tamacat.httpd.handler.HCReverseProxyHandler">
+	<bean id="NoAuthReverseHandler2" class="org.tamacat.httpd.handler.ReverseProxyHandler">
 		<property name="httpFilter">
 			<ref bean="AccessLogFilter" />
 		</property>
