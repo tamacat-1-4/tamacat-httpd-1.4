@@ -170,7 +170,7 @@ public class RequestUtils {
 		return parameters;
 	}
 	
-	public static void setParameter(HttpContext context, String name, String... values) throws IOException {
+	public static void setParameter(HttpContext context, String name, String... values) {
 		RequestParameters parameters = getParameters(context);
 		parameters.setParameter(name, values);
 	}
