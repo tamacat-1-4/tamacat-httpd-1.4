@@ -2,12 +2,11 @@
  * Copyright (c) 2019 tamacat.org
  * All rights reserved.
  */
-package org.tamacat.httpd;
+package org.tamacat.httpd.core;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.tamacat.httpd.core.HttpEngine;
 import org.tamacat.httpd.middleware.Middleware;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
