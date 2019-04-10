@@ -17,8 +17,8 @@ import org.tamacat.util.StringUtils;
 
 /**
  * Response Filter for Set-Cookie response header adding Secure/HttpOnly attributes.
- * 
- * <li>httpSecureEnabled: default false: always add attributes.</li>
+ * <li>useForwardedProto: default false. true: for TEST http access, DO NOT Add Secure attribute. (delete Secure attribute)</li>
+ * <li>httpSecureEnabled: default false: http and https always add Secure attributes.</li>
  * <li>checkParentRequestHeader: default "X-Forwarded-For"
  *    if httpSecureEnabled=true and request header exists then add attributes.</li>
  *    
@@ -33,6 +33,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	static final String CONTEXT_SET_COOKIE_CONVERT = "SetCookieConvertFilter.__SET_COOKIE_CONVERT__";
 	
 	protected ServiceUrl serviceUrl;
+	protected boolean useForwardedProto; //X-Forwarded-Proto: http -> DO NOT ADD Secure attribute.
 
 	protected boolean httpSecureEnabled; //default false: always convert.
 	protected String checkParentRequestHeader = "X-Forwarded-For";
@@ -48,7 +49,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	@Override
 	public void doFilter(HttpRequest req, HttpResponse resp, HttpContext context) {
 		//for Internal http access.
-		if (checkAddSecureEnabled(req) == false) {
+		if (checkFilterEnabled(req) == false) {
 			context.setAttribute(CONTEXT_SET_COOKIE_CONVERT, "skip");
 		}
 	}
@@ -59,12 +60,12 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		if ("skip".equals(context.getAttribute(CONTEXT_SET_COOKIE_CONVERT))) {
 			return;
 		}
-		if (isHttpOnly || isSecure) {
+		if (isSecure || isHttpOnly) {
 			Header[] headers = resp.getHeaders("Set-Cookie");
 			for (Header header : headers) {
 				String value = header.getValue();
 				if (StringUtils.isNotEmpty(value)) {
-					String convertedValue = convertSetCookieValue(value);
+					String convertedValue = convertSetCookieValue(req, value);
 					LOG.trace("[Filter] "+value +" => "+convertedValue);
 					resp.removeHeader(header);
 					resp.addHeader(new BasicHeader("Set-Cookie", convertedValue));
@@ -73,10 +74,20 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		}
 	}
 
-	protected boolean checkAddSecureEnabled(HttpRequest req) {
-		//Always add Set-Cookie Secure attribute.
-		if (httpSecureEnabled == false) return true;
+	protected boolean checkForwardedProtoHttp(HttpRequest req) {
+		String proto = HeaderUtils.getHeader(req, "X-Forwarded-Proto");
+		if ("http".equalsIgnoreCase(proto)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	protected boolean checkFilterEnabled(HttpRequest req) {
+		//http and https Always add Set-Cookie Secure attribute.
+		if (useForwardedProto || httpSecureEnabled == false) return true;
 		
+		//for TEST http access DO NOT add Secure attribute.
 		String header = HeaderUtils.getHeader(req, checkParentRequestHeader);
 		if (StringUtils.isNotEmpty(header)) {
 			return true; //use Load baranser. Add Set-Cookie Secure attribute.
@@ -85,26 +96,34 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		}
 	}
 	
-	protected String convertSetCookieValue(String headerValue) {
-		StringBuilder convertedValue = new StringBuilder(headerValue.replaceAll(";$",""));
-		String[] values = StringUtils.split(headerValue, ";");
-		boolean containsHttpOnly = false;
-		boolean containsSecure = false;
+	protected String convertSetCookieValue(HttpRequest req, String headerValue) {
+		StringBuilder convertedValue = new StringBuilder();
+		String[] values = StringUtils.split(headerValue.replaceAll(";$",""), ";");
+		//delete HttpOnly and Secure attributes.
 		for (String value : values) {
 			String v = value.trim().toLowerCase();
-			if ("httponly".equals(v)) {
-				containsHttpOnly = true;
+			//delete HttpOnly attribute.
+			if ("httponly".equals(v) && isHttpOnly) {
 				continue;
 			}
+			//delete Secure attribute.
 			if ("secure".equals(v)) {
-				containsSecure = true;
 				continue;
+			}
+			if (convertedValue.length() == 0) {
+				convertedValue.append(value);
+			} else {
+				convertedValue.append("; " + value);
 			}
 		}
-		if (isHttpOnly && containsHttpOnly==false) {
+		if(convertedValue.length()==0) {
+			return headerValue;
+		}
+		if (isHttpOnly) {
 			convertedValue.append("; HttpOnly");
 		}
-		if (isSecure && containsSecure==false) {
+		//Add Secure attribute. for isSecure and https (NOT TEST http access)
+		if (isSecure && checkForwardedProtoHttp(req)==false) {
 			convertedValue.append("; Secure");
 		}
 		return convertedValue.toString();
@@ -121,7 +140,17 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	public void setHttpSecureEnabled(boolean httpSecureEnabled) {
 		this.httpSecureEnabled = httpSecureEnabled;
 	}
-
+	
+	/**
+	 * Set-Cookie Secure attribute ADD and DELETE using X-Forwarded-Proto request header.
+	 * true: "X-Forwarded-Proto: http" then DO NOT ADD Secure attribute and DELETE Secure attribute.
+	 * @param useForwardedProto
+	 * @since 1.4-20190410
+	 */
+	public void setUseForwardedProto(boolean useForwardedProto) {
+		this.useForwardedProto = useForwardedProto;
+	}
+	
 	public void setCheckParentRequestHeader(String checkParentRequestHeader) {
 		this.checkParentRequestHeader = checkParentRequestHeader;
 	}
