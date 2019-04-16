@@ -185,6 +185,56 @@ public class ReverseUtilsTest {
 	}
 	
 	@Test
+	public void testSetXForwardedProto() throws Exception {
+		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ServerConfig config = new ServerConfig();
+		config.setParam("https", "false");
+		ReverseUtils.setXForwardedProto(request, config);
+		assertEquals("http", request.getFirstHeader("X-Forwarded-Proto").getValue());
+	}
+	
+	@Test
+	public void testSetXForwardedPort() throws Exception {
+		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		ServerConfig config = new ServerConfig();
+		config.setParam("Port", "4443");
+		config.setParam("https", "false");
+		ReverseUtils.setXForwardedPort(request, config);
+		assertEquals("4443", request.getFirstHeader("X-Forwarded-Port").getValue());
+	}
+	
+	@Test
+	public void testSetXForwarded_From_LB() throws Exception {
+		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		//LoadBalancer add X-Forwarded request headers.
+		request.setHeader("X-Forwarded-Port", "443");
+		request.setHeader("X-Forwarded-Proto", "https");
+		
+		ServerConfig config = new ServerConfig();
+		config.setParam("Port", "80");
+		config.setParam("https", "false");
+		ReverseUtils.setXForwardedPort(request, config);
+		ReverseUtils.setXForwardedProto(request, config);
+		
+		assertEquals("443", request.getFirstHeader("X-Forwarded-Port").getValue());
+		assertEquals("https", request.getFirstHeader("X-Forwarded-Proto").getValue());
+	}
+	
+	@Test
+	public void testSetXForwarded_HTTPS() throws Exception {
+		HttpRequest request = new BasicHttpRequest("GET", "/examples/servlets");
+		
+		ServerConfig config = new ServerConfig();
+		config.setParam("Port", "443");
+		config.setParam("https", "true");
+		ReverseUtils.setXForwardedPort(request, config);
+		ReverseUtils.setXForwardedProto(request, config);
+		
+		assertEquals("443", request.getFirstHeader("X-Forwarded-Port").getValue());
+		assertEquals("https", request.getFirstHeader("X-Forwarded-Proto").getValue());
+	}
+	
+	@Test
 	public void testGetConvertedSetCookieHeader() throws Exception {
 		String before = "JSESSIONID=1234567890ABCDEFGHIJKLMNOPQRSTUV; Path=/dist";
 		String dist = "/dist";

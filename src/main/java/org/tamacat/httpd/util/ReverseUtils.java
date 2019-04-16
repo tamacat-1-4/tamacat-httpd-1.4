@@ -40,6 +40,7 @@ import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.auth.AuthComponent;
 import org.tamacat.httpd.config.HttpProxyConfig;
 import org.tamacat.httpd.config.ReverseUrl;
+import org.tamacat.httpd.config.ServerConfig;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.log.Log;
 import org.tamacat.log.LogFactory;
@@ -244,6 +245,45 @@ public class ReverseUtils {
 		Header hostHeader = request.getFirstHeader(HTTP.TARGET_HOST);
 		if (hostHeader != null) {
 			request.setHeader("X-Forwarded-Host", hostHeader.getValue());
+		}
+	}
+	
+	/**
+	 * <p>Set the forwarded proto request header for origin server.
+	 * @param request
+	 * @param config
+	 * @since 1.4-20190416
+	 */
+	public static void setXForwardedProto(HttpRequest request, ServerConfig config) {
+		String proto = HeaderUtils.getHeader(request, "X-Forwarded-Proto");
+		if (StringUtils.isEmpty(proto)) {
+			if (config.useHttps()) {
+				request.setHeader("X-Forwarded-Proto", "https");
+			} else {
+				request.setHeader("X-Forwarded-Proto", "http");
+			}
+		}
+	}
+
+	/**
+	 * <p>Set the forwarded port request header for origin server.
+	 * @param request
+	 * @param config
+	 * @since 1.4-20190416
+	 */
+	public static void setXForwardedPort(HttpRequest request, ServerConfig config) {
+		String port = HeaderUtils.getHeader(request, "X-Forwarded-Port");
+		if (StringUtils.isEmpty(port)) {
+			int serverPort = config.getPort();
+			if (serverPort > 0) {
+				request.setHeader("X-Forwarded-Port", String.valueOf(serverPort));
+			} else {
+				if (config.useHttps()) {
+					request.setHeader("X-Forwarded-Port", "443");
+				} else {
+					request.setHeader("X-Forwarded-Port", "80");
+				}
+			}
 		}
 	}
 

@@ -86,7 +86,9 @@ public class ReverseProxyHandler extends AbstractHttpHandler {
 		//Set the X-Forwarded Headers.
 		ReverseUtils.setXForwardedFor(request, context, useForwardHeader, forwardHeader);
 		ReverseUtils.setXForwardedHost(request);
-
+		ReverseUtils.setXForwardedProto(request, serviceUrl.getServerConfig());
+		ReverseUtils.setXForwardedPort(request, serviceUrl.getServerConfig());
+		
 		ReverseUrl reverseUrl = getReverseUrl(context);
 
 		//Access Backend server.
