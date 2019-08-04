@@ -138,6 +138,8 @@ public class RequestUtils {
 							parameters.setParameter(p[0], URLDecoder.decode(p[1], encoding));
 						} catch (Exception e) {
 						}
+					} else if (p.length == 1) {
+						parameters.setParameter(p[0], "");
 					}
 				}
 			}
@@ -160,6 +162,8 @@ public class RequestUtils {
 									URLDecoder.decode(keyValue[1], encoding));
 							} catch (Exception e) {
 							}
+						} else if (keyValue.length==1) {
+							parameters.setParameter(keyValue[0], "");
 						}
 					}
 				} catch (IOException e) {
@@ -197,6 +201,8 @@ public class RequestUtils {
 							parameters.setParameter(p[0], URLDecoder.decode(p[1], encoding));
 						} catch (Exception e) {
 						}
+					} else if (p.length == 1){
+						parameters.setParameter(p[0], "");
 					}
 				}
 			}
@@ -219,6 +225,8 @@ public class RequestUtils {
 									URLDecoder.decode(keyValue[1], encoding));
 							} catch (Exception e) {
 							}
+						} else if (keyValue.length == 1) {
+							parameters.setParameter(keyValue[0], "");
 						}
 					}
 				} catch (IOException e) {

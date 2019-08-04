@@ -34,12 +34,13 @@ public class FileMimeTypesTest extends TestCase {
     	String ext = fileName.substring(fileName.lastIndexOf('.')+1, fileName.length());
     	return mimeTypes.getProperty(ext.toLowerCase(), "text/html");
     }
+    
 	
     @Test
 	public void testType() {
-		//File file = new File("c:/tmp/test.jpg");
-		//String type = getContentType(file);
-		//assertEquals("image/jpeg", type);
+    	String fileName = "test.woff2";
+    	String ext = fileName.substring(fileName.lastIndexOf('.')+1, fileName.length());
+    	System.out.println(mimeTypes.getProperty(ext.toLowerCase(), "text/html"));
 	}
 
 }

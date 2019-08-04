@@ -88,7 +88,12 @@ public class RequestUtilsTest {
 	public void testSetParametersHttpContextRequestParameters() throws Exception {
 		RequestParameters params = new RequestParameters();
 		params.setParameter("key1", "value1");
+		params.setParameter("key2", "");
 		RequestUtils.setParameters(context, params);
+		
+		assertEquals("value1", params.getParameter("key1"));
+		assertEquals("", params.getParameter("key2"));
+		assertEquals(null, params.getParameter("key3"));
 	}
 
 	@Test

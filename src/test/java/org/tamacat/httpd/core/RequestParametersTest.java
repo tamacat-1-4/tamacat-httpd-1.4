@@ -25,10 +25,19 @@ public class RequestParametersTest {
 
 		target.setParameter("test", (String[])null);
 		assertNull(target.getParameter("test"));
+		assertEquals(null, target.getParameter("test-null"));
 
 		target = new RequestParameters();
 		target.setParameter("test", "ok");
 		assertEquals("ok", target.getParameter("test"));
+		assertEquals(null, target.getParameter("test-null"));
+
+		target = new RequestParameters();
+		target.setParameter("test", "");
+		assertEquals("", target.getParameter("test"));
+		
+		assertEquals(null, target.getParameter("test-null"));
+		
 	}
 
 	@Test
@@ -37,6 +46,8 @@ public class RequestParametersTest {
 
 		target.setParameter("test", "1","2","3");
 		assertEquals(3, target.getParameters("test").length);
+		
+		assertEquals(null, target.getParameter("test-null"));
 	}
 
 	@Test
