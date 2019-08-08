@@ -32,6 +32,12 @@ public class MimeUtils {
 	 */
 	public static String getContentType(String path) {
 		if (StringUtils.isEmpty(path)) return null;
+		if (path.indexOf('?')>=0) {
+			String[] tmp = StringUtils.split(path, "?");
+			if (tmp.length >= 1) {
+				path = tmp[0];
+			}
+		}
 		String ext = path.substring(path.lastIndexOf('.') + 1, path.length());
 		String contentType = mimeTypes.getProperty(ext.toLowerCase());
 		return contentType;
