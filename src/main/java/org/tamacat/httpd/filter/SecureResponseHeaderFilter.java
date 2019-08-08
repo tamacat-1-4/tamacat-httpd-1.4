@@ -65,7 +65,8 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 		if (StringUtils.isNotEmpty(pragma) && response.containsHeader(HttpHeaders.PRAGMA) == false) {
 			response.setHeader(HttpHeaders.PRAGMA, pragma);
 		}
-		if (response.containsHeader(HttpHeaders.CONTENT_TYPE) == false) {
+		
+		if (response.getStatusLine().getStatusCode() == 200 && response.containsHeader(HttpHeaders.CONTENT_TYPE) == false) {
 			response.setHeader(HttpHeaders.CONTENT_TYPE, getContentType(request.getRequestLine().getUri()));
 		}
 	}
