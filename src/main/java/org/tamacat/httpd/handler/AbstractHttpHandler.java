@@ -29,6 +29,7 @@ import org.tamacat.httpd.filter.HttpFilter;
 import org.tamacat.httpd.filter.RequestFilter;
 import org.tamacat.httpd.filter.ResponseFilter;
 import org.tamacat.httpd.handler.page.VelocityErrorPage;
+import org.tamacat.httpd.util.MimeUtils;
 import org.tamacat.httpd.util.RequestUtils;
 import org.tamacat.httpd.util.ServerUtils;
 import org.tamacat.log.Log;
@@ -44,21 +45,6 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 
 	static final Log LOG = LogFactory.getLog(AbstractHttpHandler.class);
 	protected static final String DEFAULT_CONTENT_TYPE = "text/html; charset=UTF-8";
-
-	protected static Properties mimeTypes;
-	
-	/*
-	 * 1. using org/tamacat/httpd/mime-types.properties} in jar archive.
-	 * 2. override or add the mime-types.properties in CLASSPATH. (optional)
-	 */
-	static {
-		mimeTypes = PropertyUtils.marge(
-				"org/tamacat/httpd/mime-types.properties", "mime-types.properties");
-	}
-
-	public static Properties getMimeTypes() {
-		return mimeTypes;
-	}
 
 	protected VelocityErrorPage errorPage;
 	protected ServiceUrl serviceUrl;
@@ -76,6 +62,23 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	protected String accessControlAllowOrigin;  //"*"
 	protected String accessControlAllowMethods; //"GET,POST,PUT,DELETE,OPTIONS"
 	protected String accessControlAllowHeaders; //"Content-Type, Authorization, X-Requested-With"
+	
+	@Deprecated //1.4-20190808 (use MimeUtils)
+	protected static Properties mimeTypes;
+	
+	/* Deplicated 1.4-20190808 (use MimeUtils)
+	 * 1. using org/tamacat/httpd/mime-types.properties} in jar archive.
+	 * 2. override or add the mime-types.properties in CLASSPATH. (optional)
+	 */
+	static {
+		mimeTypes = PropertyUtils.marge(
+				"org/tamacat/httpd/mime-types.properties", "mime-types.properties");
+	}
+	
+	@Deprecated //1.4-20190808 (use MimeUtils)
+	public static Properties getMimeTypes() {
+		return mimeTypes;
+	}
 	
 	protected boolean parseRequestParameters = true;
 	
@@ -294,9 +297,7 @@ public abstract class AbstractHttpHandler implements HttpHandler {
 	 * @since 1.1
 	 */
 	protected String getContentType(String path) {
-		String ext = path.substring(path.lastIndexOf('.')+1, path.length());
-		String contentType =  getMimeTypes().getProperty(ext.toLowerCase());
-		return contentType;
+		return MimeUtils.getContentType(path);
 	}
 
 	/**
