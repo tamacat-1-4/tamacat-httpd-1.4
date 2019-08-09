@@ -7,6 +7,9 @@ import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHttpEntityEnclosingRequest;
 import org.apache.http.message.BasicHttpRequest;
 import org.apache.http.message.BasicHttpResponse;
@@ -137,20 +140,36 @@ public class SecureResponseHeaderFilterTest {
 	}
 	
 	@Test
-	public void testContentType() {
+	public void testContentType() throws Exception {
 		HttpRequest request = createHttpRequest("GET", "/");
 		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setEntity(new ByteArrayEntity("TEST".getBytes()));
 		HttpContext context = createHttpContext();
-		
+		//System.out.println(response.getEntity().getContentType());
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
 		filter.afterResponse(request, response, context);
 		assertEquals("text/html; charset=UTF-8", HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE));
 	}
 
 	@Test
-	public void testContentType2() {
+	public void testContentTypeJSON() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/test");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setEntity(new StringEntity("{}", ContentType.APPLICATION_JSON));
+		HttpContext context = createHttpContext();
+		//System.out.println(response.getEntity().getContentType());
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.afterResponse(request, response, context);
+		assertEquals(null, HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE));
+		assertEquals("application/json; charset=UTF-8", response.getEntity().getContentType().getValue());
+	}
+	
+	@Test
+	public void testContentType200() throws Exception {
 		HttpRequest request = createHttpRequest("GET", "/font.woff2");
 		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setEntity(new ByteArrayEntity("TEST".getBytes()));
+		//System.out.println(response.getEntity().getContentType());
 		HttpContext context = createHttpContext();
 		
 		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
@@ -158,6 +177,18 @@ public class SecureResponseHeaderFilterTest {
 		assertEquals("font/woff2", HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE));
 	}
 
+	@Test
+	public void testContentType302() throws Exception {
+		HttpRequest request = createHttpRequest("GET", "/font.woff2");
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 302, "Found");
+
+		HttpContext context = createHttpContext();
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		filter.afterResponse(request, response, context);
+		assertEquals(null, HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE));
+	}
+	
 	public static HttpRequest createHttpRequest(String method, String uri) {
 		if ("POST".equalsIgnoreCase(method)) {
 			return new BasicHttpEntityEnclosingRequest(method, uri);
