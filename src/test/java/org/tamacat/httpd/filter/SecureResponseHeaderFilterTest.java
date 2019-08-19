@@ -189,6 +189,24 @@ public class SecureResponseHeaderFilterTest {
 		assertEquals(null, HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE));
 	}
 	
+	@Test
+	public void testIsAddCacheControlHeadersFalse() throws Exception {
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setHeader(HttpHeaders.CONTENT_TYPE, "font/woff2");
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		assertEquals(false, filter.isAddCacheControlHeaders(response));
+	}
+	
+	@Test
+	public void testIsAddCacheControlHeadersTrue() throws Exception {
+		HttpResponse response = createHttpResponse(HttpVersion.HTTP_1_1, 200, "OK");
+		response.setHeader(HttpHeaders.CONTENT_TYPE, "text/html");
+		
+		SecureResponseHeaderFilter filter = new SecureResponseHeaderFilter();
+		assertEquals(true, filter.isAddCacheControlHeaders(response));
+	}
+	
 	public static HttpRequest createHttpRequest(String method, String uri) {
 		if ("POST".equalsIgnoreCase(method)) {
 			return new BasicHttpEntityEnclosingRequest(method, uri);

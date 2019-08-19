@@ -4,12 +4,15 @@
  */
 package org.tamacat.httpd.filter;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.protocol.HttpContext;
 import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.filter.ResponseFilter;
+import org.tamacat.httpd.util.HeaderUtils;
 import org.tamacat.httpd.util.MimeUtils;
 import org.tamacat.util.StringUtils;
 
@@ -28,6 +31,8 @@ import org.tamacat.util.StringUtils;
  * 
  * When Content-Type header is not set, Content-type is determined from mime-types.properties
  * based on the extension and set in response header. (default: "text/html; charset=UTF-8")
+ * 
+ * When Content-type is font, header related to Cache-Control is not added. (for IE11)
  */
 public class SecureResponseHeaderFilter implements ResponseFilter {
 	
@@ -47,6 +52,13 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 
 	@Override
 	public void afterResponse(HttpRequest request, HttpResponse response, HttpContext context) {
+		if (response.getStatusLine().getStatusCode() <= 200 && response.getStatusLine().getStatusCode() < 300
+		  && response.getEntity() != null
+		  && StringUtils.isEmpty(response.getEntity().getContentType())
+		  && response.containsHeader(HttpHeaders.CONTENT_TYPE) == false) {
+			response.setHeader(HttpHeaders.CONTENT_TYPE, getContentType(request.getRequestLine().getUri()));
+		}
+		
 		if (StringUtils.isNotEmpty(frameOptions) && response.containsHeader("X-Frame-Options") == false) {
 			response.setHeader("X-Frame-Options", frameOptions);
 		}
@@ -56,24 +68,53 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 		if (StringUtils.isNotEmpty(xssProtection) && response.containsHeader("X-XSS-Protection") == false) {
 			response.setHeader("X-XSS-Protection", xssProtection);
 		}
-		if (StringUtils.isNotEmpty(expires) && response.containsHeader(HttpHeaders.EXPIRES) == false) {
-			response.setHeader(HttpHeaders.EXPIRES, expires);
-		}
-		if (StringUtils.isNotEmpty(cacheControl) && response.containsHeader(HttpHeaders.CACHE_CONTROL) == false) {
-			response.setHeader(HttpHeaders.CACHE_CONTROL, cacheControl);
-		}
-		if (StringUtils.isNotEmpty(pragma) && response.containsHeader(HttpHeaders.PRAGMA) == false) {
-			response.setHeader(HttpHeaders.PRAGMA, pragma);
-		}
-		
-		if (response.getStatusLine().getStatusCode() <= 200 && response.getStatusLine().getStatusCode() < 300
-		  && response.getEntity() != null
-		  && StringUtils.isEmpty(response.getEntity().getContentType())
-		  && response.containsHeader(HttpHeaders.CONTENT_TYPE) == false) {
-			response.setHeader(HttpHeaders.CONTENT_TYPE, getContentType(request.getRequestLine().getUri()));
+		if (isAddCacheControlHeaders(response)) {
+			if (StringUtils.isNotEmpty(expires) && response.containsHeader(HttpHeaders.EXPIRES) == false) {
+				response.setHeader(HttpHeaders.EXPIRES, expires);
+			}
+			if (StringUtils.isNotEmpty(cacheControl) && response.containsHeader(HttpHeaders.CACHE_CONTROL) == false) {
+				response.setHeader(HttpHeaders.CACHE_CONTROL, cacheControl);
+			}
+			if (StringUtils.isNotEmpty(pragma) && response.containsHeader(HttpHeaders.PRAGMA) == false) {
+				response.setHeader(HttpHeaders.PRAGMA, pragma);
+			}
 		}
 	}
+	
+	protected boolean isAddCacheControlHeaders(HttpResponse response) {
+		String contentType = getContentType(response);
+		if (StringUtils.isNotEmpty(contentType)) {
+			//for IE11 Web Fonts
+			if (contentType.startsWith("font/")) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	protected String getContentType(HttpResponse response) {
+		String contentType = HeaderUtils.getHeader(response, HttpHeaders.CONTENT_TYPE);
+		HttpEntity entity = response.getEntity();
+		if (StringUtils.isEmpty(contentType) && entity != null) {
+			Header h = response.getEntity().getContentType();
+			if (h != null) {
+				contentType = h.getValue();
+			}
+		}
+		return contentType;
+	}
 
+	protected String getContentType(String path) {
+		try {
+			String contentType = MimeUtils.getContentType(path);
+			if (StringUtils.isNotEmpty(contentType)) {
+				return contentType;
+			}
+		} catch (Exception e) {
+		}
+		return defaultContentType;
+	}
+	
 	public void setFrameOptions(String frameOptions) {
 		this.frameOptions = frameOptions;
 	}
@@ -100,16 +141,5 @@ public class SecureResponseHeaderFilter implements ResponseFilter {
 	
 	public void setDefaultContentType(String defaultContentType) {
 		this.defaultContentType = defaultContentType;
-	}
-	
-	protected String getContentType(String path) {
-		try {
-			String contentType = MimeUtils.getContentType(path);
-			if (StringUtils.isNotEmpty(contentType)) {
-				return contentType;
-			}
-		} catch (Exception e) {
-		}
-		return defaultContentType;
 	}
 }
