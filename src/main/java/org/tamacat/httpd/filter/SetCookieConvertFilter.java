@@ -40,6 +40,9 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	
 	protected boolean isHttpOnly;
 	protected boolean isSecure;
+	protected boolean useSameSite;
+	protected String sameSite;
+	
 
 	@Override
 	public void init(ServiceUrl serviceUrl) {
@@ -60,7 +63,7 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		if ("skip".equals(context.getAttribute(CONTEXT_SET_COOKIE_CONVERT))) {
 			return;
 		}
-		if (isSecure || isHttpOnly) {
+		if (isSecure || isHttpOnly || useSameSite) {
 			Header[] headers = resp.getHeaders("Set-Cookie");
 			for (Header header : headers) {
 				String value = header.getValue();
@@ -99,15 +102,26 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 	protected String convertSetCookieValue(HttpRequest req, String headerValue) {
 		StringBuilder convertedValue = new StringBuilder();
 		String[] values = StringUtils.split(headerValue.replaceAll(";$",""), ";");
+		String sameSiteValue = sameSite;
 		//delete HttpOnly and Secure attributes.
 		for (String value : values) {
 			String v = value.trim().toLowerCase();
 			//delete HttpOnly attribute.
-			if ("httponly".equals(v) && isHttpOnly) {
+			if (isHttpOnly && "httponly".equals(v)) {
 				continue;
 			}
 			//delete Secure attribute.
 			if ("secure".equals(v)) {
+				continue;
+			}
+			//delete SameSite attribute. (use already set a value)
+			if (useSameSite && v.startsWith("samesite=")) {
+				String[] kv = StringUtils.split(value, "=");
+				if (kv.length == 2) {
+					sameSiteValue = kv[1];
+				} else if (kv.length == 1) {
+					sameSiteValue = "";
+				}
 				continue;
 			}
 			if (convertedValue.length() == 0) {
@@ -126,6 +140,9 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 		if (isSecure && checkForwardedProtoHttp(req)==false) {
 			convertedValue.append("; Secure");
 		}
+		if (useSameSite) {
+			convertedValue.append("; SameSite="+sameSiteValue);
+		}
 		return convertedValue.toString();
 	}
 
@@ -135,6 +152,16 @@ public class SetCookieConvertFilter implements RequestFilter, ResponseFilter {
 
 	public void setSecure(boolean isSecure) {
 		this.isSecure = isSecure;
+	}
+	
+	/**
+	 * Set-Cookie SameSite attribute.
+	 * @param sameSite "Strict" or "Lax",
+	 * @since 1.4-20200130
+	 */
+	public void setSameSite(String sameSite) {
+		this.sameSite = sameSite;
+		this.useSameSite = StringUtils.isNotEmpty(sameSite);
 	}
 	
 	public void setHttpSecureEnabled(boolean httpSecureEnabled) {
