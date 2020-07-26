@@ -24,6 +24,8 @@ import org.apache.http.HttpInetConnection;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpServerConnection;
 import org.apache.http.RequestLine;
+import org.apache.http.entity.BufferedHttpEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicRequestLine;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
@@ -32,9 +34,13 @@ import org.tamacat.httpd.config.ServiceUrl;
 import org.tamacat.httpd.core.BasicHttpStatus;
 import org.tamacat.httpd.core.RequestParameters;
 import org.tamacat.httpd.exception.HttpException;
+import org.tamacat.log.Log;
+import org.tamacat.log.LogFactory;
 import org.tamacat.util.StringUtils;
 
 public class RequestUtils {
+	
+	static final Log LOG = LogFactory.getLog(RequestUtils.class);
 	
 	static final String HTTP_REQUEST_PARAMETERS = "http.request.parameters";
 
@@ -62,11 +68,6 @@ public class RequestUtils {
 				path.substring(path.indexOf("/"), path.length()),
 				requestline.getProtocolVersion());
 		}
-//		Path path = Paths.get(uri);
-//		Path p = path.subpath(0, path.getNameCount());
-//		return new BasicRequestLine(requestline.getMethod(),
-//				p,
-//				requestline.getProtocolVersion());
 	}
 
 	/**
@@ -83,6 +84,7 @@ public class RequestUtils {
 				}
 			}
 		} catch (RuntimeException e) {
+			LOG.warn(e.getMessage());
 		}
 		return uri;
 	}
@@ -107,17 +109,15 @@ public class RequestUtils {
 	public static RequestParameters parseParameters(HttpRequest request, HttpContext context, String encoding) {
 		synchronized (context) {
 			RequestParameters parameters = (RequestParameters) context.getAttribute(HTTP_REQUEST_PARAMETERS);
-			if (parameters != null) {
+			if (parameters == null) {
 				try {
-					RequestParameters params = parseParameters(request, encoding);
-					parameters = params;
+					parameters = parseParameters(request, encoding);
+					context.setAttribute(HTTP_REQUEST_PARAMETERS, parameters);
 				} catch (Exception e) {
-					//ALREADY PARSED REQUEST.
+					//BAD REQUEST.
+					LOG.warn(e.getMessage());
 				}
-			} else {
-				parameters = parseParameters(request, encoding);
 			}
-			context.setAttribute(HTTP_REQUEST_PARAMETERS, parameters);
 			return parameters;
 		}
 	}
@@ -126,13 +126,13 @@ public class RequestUtils {
 		RequestParameters parameters = new RequestParameters();
 		String path = request.getRequestLine().getUri();
 		if (path.indexOf('?') >= 0) {
-			String[] requestParams = path.split("\\?");
+			String[] requestParams = StringUtils.split(path, "?");
 			//set request parameters for Custom HttpRequest.
 			if (requestParams.length >= 2) {
 				String params = requestParams[1];
-				String[] param = params.split("&");
+				String[] param = StringUtils.split(params, "&");
 				for (String kv : param) {
-					String[] p = kv.split("=");
+					String[] p = StringUtils.split(kv, "=");
 					if (p.length >=2) {
 						try {
 							parameters.setParameter(p[0], URLDecoder.decode(p[1], encoding));
@@ -144,7 +144,7 @@ public class RequestUtils {
 				}
 			}
 		}
-		if (isEntityEnclosingRequest(request) && ! RequestUtils.isMultipart(request)) {
+		if (isEntityEnclosingRequest(request) && RequestUtils.isFormUrlEncoded(request)) {
 			HttpEntity entity = getEntity(request);
 			if (entity != null) {
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent()))) {
@@ -153,9 +153,13 @@ public class RequestUtils {
 					while ((s = reader.readLine()) != null) {
 						sb.append(s);
 					}
-					String[] params = sb.toString().split("&");
+					String requestBody = sb.toString();
+					//for Reuse handler
+					getHttpEntityEnclosingRequest(request).setEntity(new StringEntity(requestBody, encoding));
+					
+					String[] params = StringUtils.split(requestBody, "&");
 					for (String param : params) {
-						String[] keyValue = param.split("=");
+						String[] keyValue = StringUtils.split(param, "=");
 						if (keyValue.length >= 2) {
 							try {
 								parameters.setParameter(keyValue[0],
@@ -188,14 +192,14 @@ public class RequestUtils {
 		RequestParameters parameters = getParameters(context);
 
 		if (path.indexOf('?') >= 0) {
-			String[] requestParams = path.split("\\?");
+			String[] requestParams = StringUtils.split(path, "?");
 			//path = requestParams[0];
 			//set request parameters for Custom HttpRequest.
 			if (requestParams.length >= 2) {
 				String params = requestParams[1];
-				String[] param = params.split("&");
+				String[] param = StringUtils.split(params, "&");
 				for (String kv : param) {
-					String[] p = kv.split("=");
+					String[] p = StringUtils.split(kv, "=");
 					if (p.length >=2) {
 						try {
 							parameters.setParameter(p[0], URLDecoder.decode(p[1], encoding));
@@ -210,15 +214,15 @@ public class RequestUtils {
 		if (isEntityEnclosingRequest(request) && ! RequestUtils.isMultipart(request)) {
 			HttpEntity entity = getEntity(request);
 			if (entity != null) {
-				try (BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent()))) {
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(new BufferedHttpEntity(entity).getContent()))) {
 					String s;
 					StringBuilder sb = new StringBuilder();
 					while ((s = reader.readLine()) != null) {
 						sb.append(s);
 					}
-					String[] params = sb.toString().split("&");
+					String[] params = StringUtils.split(sb.toString(), "&");
 					for (String param : params) {
-						String[] keyValue = param.split("=");
+						String[] keyValue = StringUtils.split(param, "=");
 						if (keyValue.length >= 2) {
 							try {
 								parameters.setParameter(keyValue[0],
@@ -350,7 +354,7 @@ public class RequestUtils {
 		if (hostHeader != null) {
 			String hostName = hostHeader.getValue();
 			if (hostName != null && hostName.indexOf(':') >= 0) {
-				String[] hostAndPort = hostName.split(":");
+				String[] hostAndPort = StringUtils.split(hostName, ":");
 				if (hostAndPort.length >= 2) {
 					hostName = hostAndPort[0];
 				}
@@ -379,7 +383,7 @@ public class RequestUtils {
 		if (hostHeader != null) {
 			hostName = hostHeader.getValue();
 			if (hostName != null && hostName.indexOf(':') >= 0) {
-				String[] hostAndPort = hostName.split(":");
+				String[] hostAndPort = StringUtils.split(hostName, ":");
 				if (hostAndPort.length >= 2) {
 					hostName = hostAndPort[0];
 					port = StringUtils.parse(hostAndPort[1],-1);
@@ -398,7 +402,7 @@ public class RequestUtils {
 				protocol = "https";
 			}
 			if (hostName != null && hostName.indexOf(':') >= 0) {
-				String[] hostAndPort = hostName.split(":");
+				String[] hostAndPort = StringUtils.split(hostName, ":");
 				if (hostAndPort.length >= 2) {
 					hostName = hostAndPort[0];
 					port = StringUtils.parse(hostAndPort[1],-1);
@@ -458,12 +462,24 @@ public class RequestUtils {
 			return null;
 		}
 	}
+	
+	public static HttpEntityEnclosingRequest getHttpEntityEnclosingRequest(HttpRequest request) {
+		if (isEntityEnclosingRequest(request)) {
+			return ((HttpEntityEnclosingRequest)request);
+		}
+		return null;
+	}
 
 	public static InputStream getInputStream(HttpRequest request) throws IOException {
 		HttpEntity entity = getEntity(request);
 		return entity != null? entity.getContent() : null;
 	}
 
+	public static boolean isFormUrlEncoded(HttpRequest request) {
+		return HeaderUtils.isFormUrlEncoded(
+				HeaderUtils.getHeader(request, HTTP.CONTENT_TYPE));
+	}
+	
 	public static boolean isMultipart(HttpRequest request) {
 		if ("post".equalsIgnoreCase(request.getRequestLine().getMethod())) {
 			return HeaderUtils.isMultipart(

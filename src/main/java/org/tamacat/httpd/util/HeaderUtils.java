@@ -25,6 +25,8 @@ import org.tamacat.util.StringUtils;
  * <p>The utility class for HTTP request and response Headers.
  */
 public final class HeaderUtils {
+	
+	static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
 	/** Cannot instantiate. */
 	HeaderUtils() {}
@@ -207,6 +209,11 @@ public final class HeaderUtils {
 		}
 	}
 
+	public static boolean isFormUrlEncoded(String line) {
+		return line != null && line.toLowerCase().startsWith(CONTENT_TYPE_FORM_URLENCODED);
+
+	}
+	
 	public static boolean isMultipart(String line) {
 		return line != null && line.toLowerCase().startsWith("multipart/");
 	}
