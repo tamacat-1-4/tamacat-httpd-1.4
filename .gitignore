@@ -1,0 +1,9 @@
+target/
+.classpath
+.project
+.factorypath
+*.class
+*.log
+.settings/
+.svn/
+!gitkeep
